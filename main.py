@@ -43,11 +43,12 @@ SNAKE_BODY = pygame.transform.scale(SNAKE_BODY_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT))
 SNAKE_HEAD_IMG = pygame.image.load(os.path.join('Assets', 'snake_head.png'))
 
 
-# function to rotate snake head based on its movement direction
-def rot_head(direction = 0):
-    SNAKE_HEAD = pygame.transform.scale(SNAKE_HEAD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT), direction)
+# function to spawn snake head with appropriate image orientation based on movement direction
+def spawn_snake_head(direction = 0):
+    SNAKE_HEAD = pygame.transform.rotate(pygame.transform.scale(SNAKE_HEAD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT)), 90)
+    return SNAKE_HEAD
 
-def draw_window(food, poison, sprint_stamina):
+def draw_window(food, poison, sprint_stamina, snake_head, snake_length):
     WIN.fill(BLACK)
     sprint_bar = pygame.font.SysFont('comicsans', 40).render("Sprint: " + str(sprint_stamina), 1, WHITE)
     WIN.blit(sprint_bar, (10, 10))
@@ -55,14 +56,20 @@ def draw_window(food, poison, sprint_stamina):
         WIN.blit(POISON_FOOD, (food.x, food.y))
     elif poison == 0:
         WIN.blit(FOOD, (food.x, food.y))
+
+    #display snake
+    WIN.blit(spawn_snake_head(), (snake_head.x, snake_head.y))
+    #for i in range(snake_length):
+    #    WIN.blit
+
     pygame.display.update()
 
 def food_movement(keys_pressed, food, sprint_stamina):
         sprint = 0
         slow_movement = 0
-        if keys_pressed[pygame.K_LSHIFT] and not keys_pressed[pygame.K_LALT]:
+        if keys_pressed[pygame.K_LSHIFT] and not keys_pressed[pygame.K_LCTRL]:
             sprint = VEL//2
-        elif keys_pressed[pygame.K_LALT] and not keys_pressed[pygame.K_LSHIFT]:
+        elif keys_pressed[pygame.K_LCTRL] and not keys_pressed[pygame.K_LSHIFT]:
             slow_movement = VEL//2      
         if sprint_stamina == 0:
             sprint = 0
@@ -76,10 +83,13 @@ def food_movement(keys_pressed, food, sprint_stamina):
         if keys_pressed[pygame.K_s] and food.y + VEL + food.height < HEIGHT: # DOWN
             food.y += VEL + sprint - slow_movement
 
+def snake_movement(snake_head, snake_length):
+    
  
 def main():
     pygame.init()
-    food = pygame.Rect(350, 250 - BLOCK_HEIGHT//2, BLOCK_WIDTH, BLOCK_HEIGHT)
+    food = pygame.Rect(450 - BLOCK_WIDTH//2, 450 - BLOCK_HEIGHT//2, BLOCK_WIDTH, BLOCK_HEIGHT)
+    snake_head = pygame.Rect(250 - BLOCK_WIDTH//2, 250 - BLOCK_HEIGHT//2, BLOCK_WIDTH, BLOCK_HEIGHT)
     clock = pygame.time.Clock()
 
     pygame.time.set_timer(regen_stamina_event, REGENERATE_STAMINA)
@@ -88,6 +98,9 @@ def main():
 
     sprint_stamina = STAMINA
     poison = 0
+
+
+    snake_length = 5
 
     run = True
     while run:
@@ -116,9 +129,10 @@ def main():
                     poison = 0
 
         food_movement(keys_pressed, food, sprint_stamina)
+        snake_movement(snake_head, snake_length)
 
+        draw_window(food, poison, sprint_stamina, snake_head, snake_length)
 
-        draw_window(food, poison, sprint_stamina)
     main()
 
 
