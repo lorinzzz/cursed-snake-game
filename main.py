@@ -60,9 +60,12 @@ def draw_window(food, poison, sprint_stamina, snakes, direction):
             WIN.blit(FOOD, (food.x, food.y))
 
     #display snake
-    WIN.blit(spawn_snake_head(direction), (snakes[0].x, snakes[0].y))
-    for i in range(1, len(snakes)):
-        WIN.blit(SNAKE_BODY, (snakes[i].x, snakes[i].y))
+    for x in range(len(snakes)):
+        for i in range(len(snakes[x])):
+            if i == 0:
+                WIN.blit(spawn_snake_head(direction[i]), (snakes[x][i].x, snakes[x][i].y))
+            elif i > 0:
+                WIN.blit(SNAKE_BODY, (snakes[x][i].x, snakes[x][i].y))
     pygame.display.update()
 
 def draw_end_game():
@@ -91,60 +94,65 @@ def food_movement(keys_pressed, food, sprint_stamina):
             food.y += VEL + sprint - slow_movement
 
 def snake_ai(snakes, food):
-    x_diff = food.x - snakes[0].x
-    y_diff = food.y - snakes[0].y
+    direction = []
+    for i in range(len(snakes)):
+        x_diff = food.x - snakes[i][0].x
+        y_diff = food.y - snakes[i][0].y
 
-    if abs(x_diff) > abs(y_diff):
-        if x_diff >= 0:
-            direction = 270         
+        if abs(x_diff) > abs(y_diff):
+            if x_diff >= 0:
+                direction.append(270)        
+            else:
+                direction.append(90)
         else:
-            direction = 90
-    else:
-        if y_diff >= 0: 
-            direction = 180
-        else:    
-            direction = 0
+            if y_diff >= 0: 
+                direction.append(180)
+            else:    
+                direction.append(0)
 
     return direction
  
 def snake_movement(snakes, direction):
-    for i in range(len(snakes) - 1, 0, -1):
-        snakes[i].x = snakes[i-1].x
-        snakes[i].y = snakes[i-1].y       
-    if direction == 0:
-        snakes[0].y -= BLOCK_WIDTH
-    elif direction == 180:
-        snakes[0].y += BLOCK_WIDTH    
-    elif direction == 90:
-        snakes[0].x -= BLOCK_WIDTH
-    elif direction == 270:
-        snakes[0].x += BLOCK_WIDTH
+    for x in range(len(snakes)):
+        for i in range(len(snakes[x]) - 1, 0, -1):
+            snakes[x][i].x = snakes[x][i-1].x
+            snakes[x][i].y = snakes[x][i-1].y       
+        if direction[x] == 0:
+            snakes[x][0].y -= BLOCK_WIDTH
+        elif direction[x] == 180:
+            snakes[x][0].y += BLOCK_WIDTH    
+        elif direction[x] == 90:
+            snakes[x][0].x -= BLOCK_WIDTH
+        elif direction[x] == 270:
+            snakes[x][0].x += BLOCK_WIDTH
 
 
 def handle_food_snake_collision(food, snakes):
-    if food.colliderect(snakes[0]):
-        pygame.event.post(pygame.event.Event(food_collided_head_event))
-
-    for i in range(1, len(snakes)):
-        if food.colliderect(snakes[i]):
-            diff_x = snakes[i].x - food.x
-            diff_y = snakes[i].y - food.y
-            print(diff_x, diff_y)
-            if abs(diff_x) > abs(diff_y): # collided horizontally
-                if diff_x >= 0: # collided from left
-                    print("left")
-                    food.x -= 3
-                else: # collided from right
-                    print("right")
-                    food.x += 3
-            elif abs(diff_y) > abs(diff_x): # collided vertically
-                if diff_y >= 0:  #collided from top
-                    print("top")
-                    food.y -= 3
-                else:         #collided from bottom
-                    print("bottom")
-                    food.y += 3
-            # collided diagnaolly??
+    for x in range(len(snakes)):
+        for i in range(len(snakes[x])):
+            if i == 0:
+                if food.colliderect(snakes[x][i]):
+                    pygame.event.post(pygame.event.Event(food_collided_head_event))
+            elif i > 0:
+                if food.colliderect(snakes[x][i]):
+                    diff_x = snakes[x][i].x - food.x
+                    diff_y = snakes[x][i].y - food.y
+                    print(diff_x, diff_y)
+                    if abs(diff_x) > abs(diff_y): # collided horizontally
+                        if diff_x >= 0: # collided from left
+                            print("left")
+                            food.x -= 3
+                        else: # collided from right
+                            print("right")
+                            food.x += 3
+                    elif abs(diff_y) > abs(diff_x): # collided vertically
+                        if diff_y >= 0:  #collided from top
+                            print("top")
+                            food.y -= 3
+                        else:         #collided from bottom
+                            print("bottom")
+                            food.y += 3
+                    # collided diagnaolly??
             
 
 def create_snakes(number_of_snakes, snake_length):
@@ -178,7 +186,7 @@ def main():
 
     end_game = 0
 
-    snakes = [pygame.Rect(300 - BLOCK_WIDTH, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 30, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 60, 150,         BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 90, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 120, 150, BLOCK_WIDTH, BLOCK_HEIGHT)]
+    snakes = [[pygame.Rect(300 - BLOCK_WIDTH, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 30, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 60, 150,         BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 90, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 120, 150, BLOCK_WIDTH, BLOCK_HEIGHT)], [pygame.Rect(600 - BLOCK_WIDTH, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 30, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 60, 150,         BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 90, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 120, 150, BLOCK_WIDTH, BLOCK_HEIGHT)]]
 
 
     run = True
