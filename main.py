@@ -130,12 +130,18 @@ def snake_movement(snakes, direction):
             snakes[x][0].x += BLOCK_WIDTH
 
 
-def handle_food_snake_collision(food, snakes):
+def handle_food_snake_collision(food, snakes, poison):
+    del_flag = 0
+    del_idx = -2
     for x in range(len(snakes)):
         for i in range(len(snakes[x])):
             if i == 0:
                 if food.colliderect(snakes[x][i]):
-                    pygame.event.post(pygame.event.Event(food_collided_head_event))
+                    if poison == 0:
+                        pygame.event.post(pygame.event.Event(food_collided_head_event))
+                    elif poison == 1:
+                        del_flag = 1
+                        del_idx = x
             elif i > 0:
                 if food.colliderect(snakes[x][i]):
                     diff_x = snakes[x][i].x - food.x
@@ -156,14 +162,16 @@ def handle_food_snake_collision(food, snakes):
                             print("bottom")
                             food.y += 3
                     # collided diagnaolly??
+    if del_flag == 1:
+        del snakes[del_idx]
             
-
+# max of 8 snakes
 def create_snakes(number_of_snakes, snake_length):
     snakes = []
     for x in range(number_of_snakes):
         snakes.append([])
-    snake_locations_x = [250, 500, 750, 250, 500, 750]
-    snake_locations_y = [100, 100, 100, 700, 700, 700]
+    snake_locations_x = [250, 500, 750, 250, 500, 750, 250, 750]
+    snake_locations_y = [100, 100, 100, 700, 700, 700, 450, 450]
     for j in range(number_of_snakes):
         #snake_length = random.randit(0,5)
         for i in range(snake_length):
@@ -180,7 +188,6 @@ def main():
 
     pygame.time.set_timer(regen_stamina_event, REGENERATE_STAMINA)
     pygame.time.set_timer(use_stamina_event, USE_STAMINA)
-    pygame.time.set_timer(poison_time_event, POISON_TIME)
 
     move = 0 
 
@@ -192,7 +199,7 @@ def main():
 
     end_game = 0
 
-    snakes = create_snakes(6,3)
+    snakes = create_snakes(8,2)
 
     run = True
     while run:
@@ -206,6 +213,7 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     poison = 1
+                    pygame.time.set_timer(poison_time_event, POISON_TIME, True) # set timer 
 
             if event.type == regen_stamina_event:
                 if sprint_stamina < STAMINA:
@@ -217,7 +225,7 @@ def main():
                         sprint_stamina -= 1
 
             if event.type == poison_time_event:
-                if poison:
+                if poison == 1:
                     poison = 0
 
             if event.type == food_collided_head_event:
@@ -225,19 +233,19 @@ def main():
 
         food_movement(keys_pressed, food, sprint_stamina)
 
-        if move % 40 == 0: # controls how fast theD snake can move
+        if move % 40 == 0: # controls how fast the snake can move
             direction = snake_ai(snakes, food)
             prev_direction = direction
-            snake_movement(snakes, direction)
+            #snake_movement(snakes, direction)
 
-        if time_control % 60 == 0:
+        if time_control % 60 == 0: # increase score every second
             time += 1
 
         if end_game == 1:
             draw_end_game(time)
             break
  
-        handle_food_snake_collision(food, snakes)
+        handle_food_snake_collision(food, snakes, poison)
         draw_window(food, poison, sprint_stamina, snakes, direction, time)
         move += 1
         time_control += 1
