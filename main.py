@@ -126,7 +126,26 @@ def handle_food_snake_collision(food, snake_head, snake_body):
     if food.colliderect(snake_head):
         pygame.event.post(pygame.event.Event(food_collided_head_event))
 
-
+    for i in range(len(snake_body)):
+        if food.colliderect(snake_body[i]):
+            diff_x = snake_body[i].x - food.x
+            diff_y = snake_body[i].y - food.y
+            print(diff_x, diff_y)
+            if abs(diff_x) > abs(diff_y): # collided horizontally
+                if diff_x >= 0: # collided from left
+                    print("left")
+                    food.x -= 3
+                else: # collided from right
+                    print("right")
+                    food.x += 3
+            elif abs(diff_y) > abs(diff_x): # collided vertically
+                if diff_y >= 0:  #collided from top
+                    print("top")
+                    food.y -= 3
+                else:         #collided from bottom
+                    print("bottom")
+                    food.y += 3
+            # collided diagnaolly??
             
 
 
@@ -191,7 +210,7 @@ def main():
         if move % 40 == 0:
             direction = snake_ai(snake_head, food)
             prev_direction = direction
-            snake_movement(snake_head, snake_body, direction)
+            #snake_movement(snake_head, snake_body, direction)
 
         if end_game == 1:
             draw_end_game()
