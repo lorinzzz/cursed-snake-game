@@ -50,10 +50,12 @@ def spawn_snake_head(direction):
     SNAKE_HEAD = pygame.transform.rotate(pygame.transform.scale(SNAKE_HEAD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT)), direction)
     return SNAKE_HEAD
 
-def draw_window(food, poison, sprint_stamina, snakes, direction):
+def draw_window(food, poison, sprint_stamina, snakes, direction, time):
     WIN.fill(BLACK)
     sprint_bar = pygame.font.SysFont('comicsans', 40).render("Sprint: " + str(sprint_stamina), 1, WHITE)
     WIN.blit(sprint_bar, (10, 10))
+    time = pygame.font.SysFont('comicsans', 40).render(str(time), 1, WHITE)
+    WIN.blit(time, (WIDTH - time.get_width() - 10, 10))
     if poison == 1:
         WIN.blit(POISON_FOOD, (food.x, food.y))
     elif poison == 0:
@@ -68,8 +70,8 @@ def draw_window(food, poison, sprint_stamina, snakes, direction):
                 WIN.blit(SNAKE_BODY, (snakes[x][i].x, snakes[x][i].y))
     pygame.display.update()
 
-def draw_end_game():
-    draw_text = pygame.font.SysFont('comicsans', 40).render("YOU LOST", 1, WHITE)
+def draw_end_game(time):
+    draw_text = pygame.font.SysFont('comicsans', 40).render("YOU LOST, YOUR SCORE IS: " + str(time), 1, WHITE)
     WIN.blit(draw_text, (WIDTH//2 - draw_text.get_width()/2, HEIGHT/2 - draw_text.get_height()/2))
     pygame.display.update()
     pygame.time.delay(5000)
@@ -180,15 +182,17 @@ def main():
     pygame.time.set_timer(use_stamina_event, USE_STAMINA)
     pygame.time.set_timer(poison_time_event, POISON_TIME)
 
-    move = 0
+    move = 0 
+
+    time_control = 0
+    time = 0
 
     sprint_stamina = STAMINA
     poison = 0
 
     end_game = 0
 
-    #snakes = [[pygame.Rect(300 - BLOCK_WIDTH, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 30, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 60, 150,         BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 90, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 120, 150, BLOCK_WIDTH, BLOCK_HEIGHT)], [pygame.Rect(600 - BLOCK_WIDTH, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 30, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 60, 150,         BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 90, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 120, 150, BLOCK_WIDTH, BLOCK_HEIGHT)]]
-    snakes = create_snakes(3,3)
+    snakes = create_snakes(6,3)
 
     run = True
     while run:
@@ -221,18 +225,22 @@ def main():
 
         food_movement(keys_pressed, food, sprint_stamina)
 
-        if move % 40 == 0:
+        if move % 40 == 0: # controls how fast theD snake can move
             direction = snake_ai(snakes, food)
             prev_direction = direction
             snake_movement(snakes, direction)
 
+        if time_control % 60 == 0:
+            time += 1
+
         if end_game == 1:
-            draw_end_game()
+            draw_end_game(time)
             break
  
         handle_food_snake_collision(food, snakes)
-        draw_window(food, poison, sprint_stamina, snakes, direction)
+        draw_window(food, poison, sprint_stamina, snakes, direction, time)
         move += 1
+        time_control += 1
     main()
 
 
