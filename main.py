@@ -60,8 +60,8 @@ def draw_window(food, poison, sprint_stamina, snake_head, snake_body, direction)
 
     #display snake
     WIN.blit(spawn_snake_head(direction), (snake_head.x, snake_head.y))
-    for i in range(len(snake_body[0])):
-        WIN.blit(SNAKE_BODY, (snake_body[0][i], snake_body[1][i]))
+    for i in range(len(snake_body)):
+        WIN.blit(SNAKE_BODY, (snake_body[i].x, snake_body[i].y))
     pygame.display.update()
 
 def draw_end_game():
@@ -107,11 +107,11 @@ def snake_ai(snake_head, food):
     return direction
  
 def snake_movement(snake_head, snake_body, direction):
-    for i in range(len(snake_body[0]) - 1, 0, -1):
-        snake_body[0][i] = snake_body[0][i-1]
-        snake_body[1][i] = snake_body[1][i-1]
-    snake_body[0][0] = snake_head.x
-    snake_body[1][0] = snake_head.y        
+    for i in range(len(snake_body) - 1, 0, -1):
+        snake_body[i].x = snake_body[i-1].x
+        snake_body[i].y = snake_body[i-1].y
+    snake_body[0].x = snake_head.x
+    snake_body[0].y = snake_head.y        
     if direction == 0:
         snake_head.y -= BLOCK_WIDTH
     elif direction == 180:
@@ -149,11 +149,12 @@ def main():
 
     end_game = 0
 
-    x = [300 - BLOCK_WIDTH - 30, 300 - BLOCK_WIDTH - 60, 300 - BLOCK_WIDTH - 90, 300 - BLOCK_WIDTH - 120, 300 - BLOCK_WIDTH - 150]
-    y= [150, 150, 150, 150, 150]
-    snake_body = []
-    snake_body.append(x)
-    snake_body.append(y)
+    #x = [300 - BLOCK_WIDTH - 30, 300 - BLOCK_WIDTH - 60, 300 - BLOCK_WIDTH - 90, 300 - BLOCK_WIDTH - 120, 300 - BLOCK_WIDTH - 150]
+    #y= [150, 150, 150, 150, 150]
+    snake_body = [pygame.Rect(300 - BLOCK_WIDTH - 30, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 60, 150, BLOCK_WIDTH, BLOCK_HEIGHT),
+                    pygame.Rect(300 - BLOCK_WIDTH - 90, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 120, 150, BLOCK_WIDTH, BLOCK_HEIGHT)]
+    #snake_body.append(x)
+    #snake_body.append(y)
 
 
     run = True
@@ -190,7 +191,7 @@ def main():
         if move % 40 == 0:
             direction = snake_ai(snake_head, food)
             prev_direction = direction
-            #snake_movement(snake_head, snake_body, direction)
+            snake_movement(snake_head, snake_body, direction)
 
         if end_game == 1:
             draw_end_game()
