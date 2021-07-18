@@ -93,6 +93,7 @@ def food_movement(keys_pressed, food, sprint_stamina):
         if keys_pressed[pygame.K_s] and food.y + VEL + food.height < HEIGHT: # DOWN
             food.y += VEL + sprint - slow_movement
 
+# handles the movement of the snake head
 def snake_ai(snakes, food):
     direction = []
     for i in range(len(snakes)):
@@ -157,14 +158,14 @@ def handle_food_snake_collision(food, snakes):
 
 def create_snakes(number_of_snakes, snake_length):
     snakes = []
+    for x in range(number_of_snakes):
+        snakes.append([])
     snake_locations_x = [250, 500, 750, 250, 500, 750]
     snake_locations_y = [100, 100, 100, 700, 700, 700]
-    for i in range(number_of_snakes):
+    for j in range(number_of_snakes):
         #snake_length = random.randit(0,5)
         for i in range(snake_length):
-            snakes.append(pygame.Rect(snake_locations_x[i] - BLOCK_WIDTH - (30 * (i+1)), snake_locations_y[i], BLOCK_WIDTH, BLOCK_HEIGHT))
-
-
+            snakes[j].append(pygame.Rect(snake_locations_x[j] - BLOCK_WIDTH - (30 * (i+1)), snake_locations_y[j], BLOCK_WIDTH, BLOCK_HEIGHT))
 
     return snakes
 
@@ -186,8 +187,8 @@ def main():
 
     end_game = 0
 
-    snakes = [[pygame.Rect(300 - BLOCK_WIDTH, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 30, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 60, 150,         BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 90, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 120, 150, BLOCK_WIDTH, BLOCK_HEIGHT)], [pygame.Rect(600 - BLOCK_WIDTH, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 30, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 60, 150,         BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 90, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 120, 150, BLOCK_WIDTH, BLOCK_HEIGHT)]]
-
+    #snakes = [[pygame.Rect(300 - BLOCK_WIDTH, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 30, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 60, 150,         BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 90, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(300 - BLOCK_WIDTH - 120, 150, BLOCK_WIDTH, BLOCK_HEIGHT)], [pygame.Rect(600 - BLOCK_WIDTH, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 30, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 60, 150,         BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 90, 150, BLOCK_WIDTH, BLOCK_HEIGHT), pygame.Rect(600 - BLOCK_WIDTH - 120, 150, BLOCK_WIDTH, BLOCK_HEIGHT)]]
+    snakes = create_snakes(3,3)
 
     run = True
     while run:
