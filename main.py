@@ -25,7 +25,7 @@ STAMINA = 100
 FPS = 60
 REGENERATE_STAMINA = 1000 #regenerate stamina every second
 USE_STAMINA = 20 # drain a percentage of stamina every 20ms == depletes full bar in 2 seconds
-POISON_TIME = 5000 # poison booster lasts only 5 seconds
+POISON_TIME = 3000 # poison booster lasts only 3 seconds
 
 regen_stamina_event = pygame.USEREVENT + 1
 use_stamina_event = pygame.USEREVENT + 2
@@ -50,12 +50,14 @@ def spawn_snake_head(direction):
     SNAKE_HEAD = pygame.transform.rotate(pygame.transform.scale(SNAKE_HEAD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT)), direction)
     return SNAKE_HEAD
 
-def draw_window(food, poison, sprint_stamina, snakes, direction, time):
+def draw_window(food, poison, sprint_stamina, snakes, direction, time, snakes_killed):
     WIN.fill(BLACK)
     sprint_bar = pygame.font.SysFont('comicsans', 40).render("Sprint: " + str(sprint_stamina), 1, WHITE)
     WIN.blit(sprint_bar, (10, 10))
-    time = pygame.font.SysFont('comicsans', 40).render(str(time), 1, WHITE)
-    WIN.blit(time, (WIDTH - time.get_width() - 10, 10))
+    time_disp = pygame.font.SysFont('comicsans', 40).render("Time: " + str(time), 1, WHITE)
+    WIN.blit(time_disp, (WIDTH - time_disp.get_width() - 10, 10))
+    snakes_killed_disp = pygame.font.SysFont('comicsans', 40).render("Snakes Killed: " + str(snakes_killed), 1, WHITE)
+    WIN.blit(snakes_killed_disp, (WIDTH - snakes_killed_disp.get_width() - 10, 40))
     if poison == 1:
         WIN.blit(POISON_FOOD, (food.x, food.y))
     elif poison == 0:
@@ -129,7 +131,8 @@ def snake_movement(snakes, direction):
         elif direction[x] == 270:
             snakes[x][0].x += BLOCK_WIDTH
 
-
+# handles collision of food, snake, and poison objects in window
+# returns 1 if snake head collided with poison food or poison object, else 0 
 def handle_food_snake_collision(food, snakes, poison):
     del_flag = 0
     del_idx = -2
@@ -164,6 +167,9 @@ def handle_food_snake_collision(food, snakes, poison):
                     # collided diagnaolly??
     if del_flag == 1:
         del snakes[del_idx]
+        return 1
+    else: 
+        return 0
             
 # max of 8 snakes
 def create_snakes(number_of_snakes, snake_length):
@@ -191,16 +197,13 @@ def main():
 
     move = 0 
 
-    time_control = 0
-    time = 0
-
     sprint_stamina = STAMINA
     poison = 0
 
     end_game = 0
 
     snakes = create_snakes(8,2)
-
+    snakes_killed = 0
     run = True
     while run:
         clock.tick(FPS)
@@ -236,19 +239,17 @@ def main():
         if move % 40 == 0: # controls how fast the snake can move
             direction = snake_ai(snakes, food)
             prev_direction = direction
-            #snake_movement(snakes, direction)
+            snake_movement(snakes, direction)
 
-        if time_control % 60 == 0: # increase score every second
-            time += 1
+
 
         if end_game == 1:
-            draw_end_game(time)
+            draw_end_game(pygame.time.get_ticks() // 1000 + (snakes_killed * 10))
             break
  
-        handle_food_snake_collision(food, snakes, poison)
-        draw_window(food, poison, sprint_stamina, snakes, direction, time)
+        snakes_killed += handle_food_snake_collision(food, snakes, poison)
+        draw_window(food, poison, sprint_stamina, snakes, direction, pygame.time.get_ticks() // 1000, snakes_killed)
         move += 1
-        time_control += 1
     main()
 
 
