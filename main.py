@@ -30,7 +30,8 @@ REGENERATE_STAMINA = 1000 #regenerate stamina every second
 USE_STAMINA = 20 # drain a percentage of stamina every 20ms == depletes full bar in 2 seconds
 BLACK = (0,0,0)
 WHITE = (255,255,255)
-FORTY_FIVE_SECONDS = 300 # 2700/60 = 45
+FORTY_FIVE_SECONDS = 2700 # 2700/60 = 45
+POWER_UP_TIME = 10000 # powers ups are only active for 10 seconds 
 
 FOOD_DEATH_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'food_death.mp3'))
 SHOOT_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'shoot.mp3'))
@@ -46,6 +47,7 @@ food_collided_head_event = pygame.USEREVENT + 4
 activate_poison_event = pygame.USEREVENT + 5
 activate_sprint_recharge_event = pygame.USEREVENT + 6
 activate_shoot_food_event = pygame.USEREVENT + 7
+disable_power_up_event = pygame.USEREVENT + 8
 
 FOOD_IMG = pygame.image.load(os.path.join('Assets', 'apple.png'))
 FOOD = pygame.transform.scale(FOOD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT))
@@ -246,7 +248,7 @@ def handle_food_power_up_collision(food, power_up, power_up_status):
                 pygame.event.post(pygame.event.Event(activate_shoot_food_event))
             elif power_up_status[0] == 3: # poison
                 pygame.event.post(pygame.event.Event(activate_poison_event))
-            return 0 # power picked up, so disable it
+            return 0 # power up picked up, so disable it
         else:
             return 1
 
@@ -350,21 +352,26 @@ def main():
             if event.type == food_collided_head_event:
                 end_game = 1
 
+            if event.type == disable_power_up_event:
+                power_up_status[1] = 0
+                print("power-up disabled!")
+            
         food_movement(keys_pressed, food, sprint_stamina)
         # generate random location for power up spawn at a random time within intervals of 45 seconds
         if time_control > drop_power_up + number_of_power_ups_dropped*FORTY_FIVE_SECONDS:
+            pygame.time.set_timer(disable_power_up_event, 0) # disable timer
             power_up = pygame.Rect(30 * random.randint(0, 29), 30 * random.randint(0, 29), BLOCK_WIDTH, BLOCK_HEIGHT)
             power_up_status[0] = random.randint(1, 3)
             power_up_status[1] = 1 # can only be turned back to zero if food collides with power_up in another function
             drop_power_up = random.randint(0, FORTY_FIVE_SECONDS)
             number_of_power_ups_dropped += 1
-
+            pygame.time.set_timer(disable_power_up_event, POWER_UP_TIME) # set timer
         power_up_status[1] = handle_food_power_up_collision(food, power_up, power_up_status)
 
         if time_control % 40 == 0: # controls how fast the snake can move
             direction = snake_ai(snakes, food)
             prev_direction = direction
-            #snake_movement(snakes, direction)
+            snake_movement(snakes, direction)
 
         if time_control % 60 == 0: # add score every second
             time += 1
@@ -384,3 +391,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+# 7/18/21
+# Notes: Need to work on the spawning and AI of snakes
