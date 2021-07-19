@@ -15,7 +15,6 @@ import os
 import random
 pygame.font.init()
 pygame.mixer.init()
-
 from pygame.event import get
 
 WIDTH, HEIGHT = 900, 900
@@ -23,14 +22,15 @@ WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Cursed Snake Game")
 
 BLOCK_WIDTH, BLOCK_HEIGHT = 30, 30
-
 VEL = 2
 FOOD_BULLET_VEL = 1.5
 STAMINA = 100
 FPS = 60
 REGENERATE_STAMINA = 1000 #regenerate stamina every second
 USE_STAMINA = 20 # drain a percentage of stamina every 20ms == depletes full bar in 2 seconds
-
+BLACK = (0,0,0)
+WHITE = (255,255,255)
+FORTY_FIVE_SECONDS = 300 # 2700/60 = 45
 
 FOOD_DEATH_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'food_death.mp3'))
 SHOOT_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'shoot.mp3'))
@@ -38,6 +38,7 @@ SNAKE_DEATH_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'snake_death.mp3')
 POISON_POWER_UP_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'poison_power_up.mp3'))
 SHOOT_POWER_UP_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'shoot_power_up.mp3'))
 SPRINT_POWER_UP_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'sprint_power_up.mp3'))
+
 regen_stamina_event = pygame.USEREVENT + 1
 use_stamina_event = pygame.USEREVENT + 2
 poison_used_event = pygame.USEREVENT + 3
@@ -45,13 +46,6 @@ food_collided_head_event = pygame.USEREVENT + 4
 activate_poison_event = pygame.USEREVENT + 5
 activate_sprint_recharge_event = pygame.USEREVENT + 6
 activate_shoot_food_event = pygame.USEREVENT + 7
-
-BLACK = (0,0,0)
-WHITE = (255,255,255)
-
-
-FORTY_FIVE_SECONDS = 300 # 2700/60 = 45
-
 
 FOOD_IMG = pygame.image.load(os.path.join('Assets', 'apple.png'))
 FOOD = pygame.transform.scale(FOOD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT))
@@ -202,6 +196,8 @@ def handle_food_snake_collision(food, snakes, poison, food_bullets):
                     if food_bullets[j].colliderect(snakes[x][i]):
                         del food_bullets[j]
                 if food.colliderect(snakes[x][i]):
+                    if poison == 1:
+                        pygame.event.post(pygame.event.Event(poison_used_event)) # take away poison if collided with body
                     diff_x = snakes[x][i].x - food.x
                     diff_y = snakes[x][i].y - food.y
                     print(diff_x, diff_y)
@@ -253,7 +249,6 @@ def handle_food_power_up_collision(food, power_up, power_up_status):
             return 0 # power picked up, so disable it
         else:
             return 1
-
 
 def handle_bullets(bullet_direction, food_bullets): # handles direction, velocity of bullets and if it goes off screen
     for i in range(len(food_bullets)):
@@ -383,7 +378,6 @@ def main():
         draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_stamina, snakes, direction, time, snakes_killed)
         time_control += 1
     main()
-
 
 if __name__ == "__main__":
     main()
