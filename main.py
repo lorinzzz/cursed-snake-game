@@ -32,6 +32,7 @@ BLACK = (0,0,0)
 WHITE = (255,255,255)
 FORTY_FIVE_SECONDS = 2700 # 2700/60 = 45
 POWER_UP_TIME = 10000 # powers ups are only active for 10 seconds 
+MAX_SNAKES = 8
 
 FOOD_DEATH_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'food_death.mp3'))
 SHOOT_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'shoot.mp3'))
@@ -39,6 +40,7 @@ SNAKE_DEATH_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'snake_death.mp3')
 POISON_POWER_UP_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'poison_power_up.mp3'))
 SHOOT_POWER_UP_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'shoot_power_up.mp3'))
 SPRINT_POWER_UP_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'sprint_power_up.mp3'))
+
 
 regen_stamina_event = pygame.USEREVENT + 1
 use_stamina_event = pygame.USEREVENT + 2
@@ -228,14 +230,52 @@ def handle_food_snake_collision(food, snakes, poison, food_bullets):
 # max of 8 snakes, maybe?
 def create_snakes(number_of_snakes, snake_length):
     snakes = []
+    snake_locations_x = []
+    snake_locations_y = []
+    x_coord, y_coord = 0, 0
     for x in range(number_of_snakes):
         snakes.append([])
-    snake_locations_x = [250, 500, 750, 250, 500, 750, 250, 750]
-    snake_locations_y = [100, 100, 100, 700, 700, 700, 450, 450]
+    for k in range(MAX_SNAKES):
+       #spawn a snake head into each octant
+        if k == 0: # octant 1 
+            x_coord = 30 * random.randint(1, 9) # [30,270]
+            y_coord = 30 * random.randint(0, 9) # [0,270]
+        elif k == 1: # octant 2
+            x_coord = 30 * random.randint(10, 20) # [300,600]
+            y_coord = 30 * random.randint(0, 9) # [0,270]           
+        elif k == 2: # octant 3
+            x_coord = 30 * random.randint(21, 29) # [630,870]
+            y_coord = 30 * random.randint(0, 9) # [0,270]              
+        elif k == 3: # octant 4
+            x_coord = 30 * random.randint(21, 29) # [630,870]
+            y_coord = 30 * random.randint(10, 20) # [300,600]             
+        elif k == 4: # octant 5
+            x_coord = 30 * random.randint(21, 29) # [630,870]
+            y_coord = 30 * random.randint(21, 29) # [630,870]             
+        elif k == 5: # octant 6
+            x_coord = 30 * random.randint(10, 20) # [300,600]     
+            y_coord = 30 * random.randint(21, 29) # [630,870]             
+        elif k == 6: # octant 7
+            x_coord = 30 * random.randint(1, 9) # [30,270]    
+            y_coord = 30 * random.randint(21, 29) # [630,870]             
+        elif k == 7: # octant 8
+            x_coord = 30 * random.randint(1, 9) # [30,270]    
+            y_coord = 30 * random.randint(10, 20) # [300,600]               
+        snake_locations_x.append(x_coord)
+        snake_locations_y.append(y_coord)   
+    
+    # shuffle x and y coord lists so in case we have less than 8 snakes, they can spawn at random octants
+    # Using zip() + shuffle() + * operator to maintain list order consistency between the two
+    print(snake_locations_x, snake_locations_y)
+    temp = list(zip(snake_locations_x, snake_locations_y))
+    random.shuffle(temp)
+    snake_locations_x, snake_locations_y = zip(*temp)
+    print(snake_locations_x, snake_locations_y)
+
     for j in range(number_of_snakes):
         #snake_length = random.randit(0,5)
-        for i in range(snake_length):
-            snakes[j].append(pygame.Rect(snake_locations_x[j] - BLOCK_WIDTH - (30 * (i+1)), snake_locations_y[j], BLOCK_WIDTH, BLOCK_HEIGHT))
+        for i in range(0, snake_length):
+            snakes[j].append(pygame.Rect(snake_locations_x[j] - BLOCK_WIDTH - (30 * i), snake_locations_y[j], BLOCK_WIDTH, BLOCK_HEIGHT)) #note: this spawns them horizontally and to the left of the head
 
     return snakes
 
@@ -265,7 +305,6 @@ def handle_bullets(bullet_direction, food_bullets): # handles direction, velocit
         if food_bullets[i].x > WIDTH or food_bullets[i].x < 0 or food_bullets[i].y > HEIGHT or food_bullets[i].y < 0:
             del food_bullets[i]
         
-
 def get_bullet_direction(keys_pressed):
     if keys_pressed[pygame.K_a]: 
         bullet_direction = 270
@@ -304,7 +343,7 @@ def main():
     number_of_power_ups_dropped = 0
 
     number_of_snakes = 8
-    snake_length = 2
+    snake_length = 1
     snakes = create_snakes(number_of_snakes, snake_length)
     snakes_killed = 0
 
@@ -371,7 +410,7 @@ def main():
         if time_control % 40 == 0: # controls how fast the snake can move
             direction = snake_ai(snakes, food)
             prev_direction = direction
-            snake_movement(snakes, direction)
+            #snake_movement(snakes, direction)
 
         if time_control % 60 == 0: # add score every second
             time += 1
@@ -391,8 +430,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
 
 
 # 7/18/21
