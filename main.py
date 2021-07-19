@@ -21,6 +21,7 @@ pygame.display.set_caption("Cursed Snake Game")
 BLOCK_WIDTH, BLOCK_HEIGHT = 30, 30
 
 VEL = 2
+FOOD_BULLET_VEL = 3
 STAMINA = 100
 FPS = 60
 REGENERATE_STAMINA = 1000 #regenerate stamina every second
@@ -32,6 +33,8 @@ use_stamina_event = pygame.USEREVENT + 2
 poison_time_event = pygame.USEREVENT + 3
 food_collided_head_event = pygame.USEREVENT + 4
 activate_poison_event = pygame.USEREVENT + 5
+activate_sprint_recharge_event = pygame.USEREVENT + 6
+activate_shoot_food_event = pygame.USEREVENT + 7
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
@@ -63,7 +66,7 @@ def spawn_snake_head(direction):
     SNAKE_HEAD = pygame.transform.rotate(pygame.transform.scale(SNAKE_HEAD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT)), direction)
     return SNAKE_HEAD
 
-def draw_window(food, poison, power_up, power_up_status, sprint_stamina, snakes, direction, time, snakes_killed):
+def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_stamina, snakes, direction, time, snakes_killed):
     WIN.fill(BLACK)
     sprint_bar = pygame.font.SysFont('comicsans', 40).render("Sprint: " + str(sprint_stamina), 1, WHITE)
     WIN.blit(sprint_bar, (10, 10))
@@ -92,9 +95,14 @@ def draw_window(food, poison, power_up, power_up_status, sprint_stamina, snakes,
             elif i > 0:
                 WIN.blit(SNAKE_BODY, (snakes[x][i].x, snakes[x][i].y))
 
+    for bullet in food_bullets:
+        pygame.draw.rect(WIN, (255,0,0), bullet)
 
     pygame.display.update()
 
+
+def draw_power_up_hud():
+    pass
 def draw_end_game(end_game, time, snakes_killed):
     if end_game == 1:
         draw_text = pygame.font.SysFont('comicsans', 34).render("YOU LOST, YOU SURVIVED " + str(time) + " SECONDS AND YOU KILLED " + str(snakes_killed) + " SNAKES", 1, WHITE)
@@ -159,13 +167,18 @@ def snake_movement(snakes, direction):
             snakes[x][0].x += BLOCK_WIDTH
 
 # handles collision of food, snake, and poison objects in window
-# returns 1 if snake head collided with poison food or poison object, else 0 
-def handle_food_snake_collision(food, snakes, poison):
+# returns 1 if snake head collided with poison food or flying food, else 0 
+def handle_food_snake_collision(food, snakes, poison, food_bullets):
     del_flag = 0
     del_idx = -2
     for x in range(len(snakes)):
         for i in range(len(snakes[x])):
             if i == 0:
+                for j in range(len(food_bullets)):
+                    if food_bullets[j].colliderect(snakes[x][i]):
+                        del_flag = 1
+                        del_idx = x
+                        del food_bullets[j]
                 if food.colliderect(snakes[x][i]):
                     if poison == 0:
                         pygame.event.post(pygame.event.Event(food_collided_head_event))
@@ -173,6 +186,9 @@ def handle_food_snake_collision(food, snakes, poison):
                         del_flag = 1
                         del_idx = x
             elif i > 0:
+                for j in range(len(food_bullets)):
+                    if food_bullets[j].colliderect(snakes[x][i]):
+                        del food_bullets[j]
                 if food.colliderect(snakes[x][i]):
                     diff_x = snakes[x][i].x - food.x
                     diff_y = snakes[x][i].y - food.y
@@ -216,20 +232,33 @@ def handle_food_power_up_collision(food, power_up, power_up_status):
     if power_up_status[1] == 1: # only check if on 
         if food.colliderect(power_up):
             if power_up_status[0] == 1: # sprint
-                pass
-            elif power_up_status[0] == 2: # drop poison
-                pass
+                pygame.event.post(pygame.event.Event(activate_sprint_recharge_event))
+            elif power_up_status[0] == 2: # shoot food
+                pygame.event.post(pygame.event.Event(activate_shoot_food_event))
             elif power_up_status[0] == 3: # poison
                 pygame.event.post(pygame.event.Event(activate_poison_event))
             return 0 # power picked up, so disable it
         else:
             return 1
-    
+
+
+def handle_bullets(bullet_direction, food_bullets): # handles direction, velocity of bullets and if it goes off screen
+    for i in range(len(food_bullets)):
+        if bullet_direction == 270: 
+            food_bullets[i].x -= FOOD_BULLET_VEL
+        if bullet_direction == 90: 
+            food_bullets[i].x += FOOD_BULLET_VEL
+        if bullet_direction == 0: 
+            food_bullets[i].y -= FOOD_BULLET_VEL
+        if bullet_direction == 180:     
+            food_bullets[i].y += FOOD_BULLET_VEL   
+
+
+
 def main():
     pygame.init()
     food = pygame.Rect(450 - BLOCK_WIDTH//2, 450 - BLOCK_HEIGHT//2, BLOCK_WIDTH, BLOCK_HEIGHT)
     power_up = pygame.Rect(30 * random.randint(0, 29), 30 * random.randint(0, 29), BLOCK_WIDTH, BLOCK_HEIGHT)
-    #snake_head = pygame.Rect(300 - BLOCK_WIDTH, 150, BLOCK_WIDTH, BLOCK_HEIGHT)
     clock = pygame.time.Clock()
 
     pygame.time.set_timer(regen_stamina_event, REGENERATE_STAMINA)
@@ -242,10 +271,14 @@ def main():
     poison = 0
 
     end_game = 0
-    
+
+    #sprint_activated = 0
+    food_bullets = []
+    activate_bullet = 0
+    bullet_direction = 0
+
     power_up_status = [-1, -1] #power up type (1-3), power up active or not (0 or 1)
     drop_power_up = random.randint(0, FORTY_FIVE_SECONDS) # 0 to 45 seconds, 750 is adjusted for the framerate (45*60 = 2700)
-    print(drop_power_up/60)
     number_of_power_ups_dropped = 0
 
     number_of_snakes = 8
@@ -264,6 +297,25 @@ def main():
             if event.type == activate_poison_event:
                 poison = 1
                 pygame.time.set_timer(poison_time_event, POISON_TIME, True) # set timer 
+
+            if event.type == activate_sprint_recharge_event:
+                sprint_stamina = STAMINA
+
+            if event.type == activate_shoot_food_event:
+                activate_bullet = 1
+            if event.type == pygame.KEYDOWN and activate_bullet == 1:
+                if event.key == pygame.K_SPACE:
+                   bullet = pygame.Rect(food.x + food.width//2, food.y + food.height//2, 10, 5)
+                   food_bullets.append(bullet)
+                   activate_bullet = 0
+                if keys_pressed[pygame.K_a]: 
+                    bullet_direction = 270
+                elif keys_pressed[pygame.K_d]: 
+                    bullet_direction = 90
+                elif keys_pressed[pygame.K_w]: 
+                    bullet_direction = 0
+                elif keys_pressed[pygame.K_s]:     
+                    bullet_direction = 180
 
             if event.type == regen_stamina_event:
                 if sprint_stamina < STAMINA:
@@ -284,7 +336,6 @@ def main():
         food_movement(keys_pressed, food, sprint_stamina)
         # generate random location for power up spawn at a random time within intervals of 45 seconds
         if time_control > drop_power_up + number_of_power_ups_dropped*FORTY_FIVE_SECONDS:
-            print("here1")
             power_up = pygame.Rect(30 * random.randint(0, 29), 30 * random.randint(0, 29), BLOCK_WIDTH, BLOCK_HEIGHT)
             power_up_status[0] = random.randint(1, 3)
             power_up_status[1] = 1 # can only be turned back to zero if food collides with power_up in another function
@@ -292,7 +343,7 @@ def main():
             number_of_power_ups_dropped += 1
 
         power_up_status[1] = handle_food_power_up_collision(food, power_up, power_up_status)
-        print(power_up_status[1])
+
         if time_control % 40 == 0: # controls how fast the snake can move
             direction = snake_ai(snakes, food)
             prev_direction = direction
@@ -301,7 +352,7 @@ def main():
         if time_control % 60 == 0: # add score every second
             time += 1
 
-        snakes_killed += handle_food_snake_collision(food, snakes, poison)
+        snakes_killed += handle_food_snake_collision(food, snakes, poison, food_bullets)
         if snakes_killed == number_of_snakes:
             end_game = 2
 
@@ -310,7 +361,9 @@ def main():
             draw_end_game(end_game, time, snakes_killed)
             break
 
-        draw_window(food, poison, power_up, power_up_status, sprint_stamina, snakes, direction, time, snakes_killed)
+        handle_bullets(bullet_direction, food_bullets)
+        draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_stamina, snakes, direction, time, snakes_killed)
+        draw_power_up_hud()
         time_control += 1
     main()
 
