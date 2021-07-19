@@ -1,14 +1,14 @@
 # implementation notes:
 # multiple snakes (upwards of 8, user can choose how many to spawn in)
 # user can choose what food he is 
-# the food can be moved diagonally, while the snakes move like they originally do
-# snakes, however cannot be killed by colliding with themselves or other snakes
-# the user (food) can be powered up by becoming poison, and thus can kill the snakes by running into them. this will be the only way for a snake to die
-# and as usual, the food can only be eaten by the snake's head
-# food can collide with snake body, and cannot be moved past it, but will not die
-# drip poison powerup !?!
-# sprint/slow movement function for apple!
-# sprint powerup?
+# the food can be moved diagonally, while the snakes move like they originally do ## DONE##
+# snakes, however cannot be killed by colliding with themselves or other snakes 
+# the user (food) can be powered up by becoming poison, and thus can kill the snakes by running into them. this will be the only way for a snake to die ## DONE##
+# and as usual, the food can only be eaten by the snake's head ## DONE##
+# food can collide with snake body, and cannot be moved past it, but will not die ## DONE##
+# drip poison powerup !?! ## DONE##
+# sprint/slow movement function for apple! ## DONE##
+# sprint powerup? ## DONE##
 
 import pygame
 import os
@@ -260,6 +260,9 @@ def handle_bullets(bullet_direction, food_bullets): # handles direction, velocit
             food_bullets[i].y -= FOOD_BULLET_VEL
         if bullet_direction == 180:     
             food_bullets[i].y += FOOD_BULLET_VEL   
+        if food_bullets[i].x > WIDTH or food_bullets[i].x < 0 or food_bullets[i].y > HEIGHT or food_bullets[i].y < 0:
+            del food_bullets[i]
+        
 
 def get_bullet_direction(keys_pressed):
     if keys_pressed[pygame.K_a]: 
