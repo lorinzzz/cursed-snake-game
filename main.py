@@ -9,6 +9,8 @@
 # drip poison powerup !?! ## DONE##
 # sprint/slow movement function for apple! ## DONE##
 # sprint powerup? ## DONE##
+# perhaps implement ability to respawn a snake after it is dead 
+# intelligent AI from snakes that will work together dynamically, game plan of snakes changes depending on how many
 
 import pygame
 import os
@@ -236,7 +238,7 @@ def create_snakes(number_of_snakes, snake_length):
     for x in range(number_of_snakes):
         snakes.append([])
     for k in range(MAX_SNAKES):
-       #spawn a snake head into each octant
+       #generate random coordinate to spawn snakehead in each coord
         if k == 0: # octant 1 
             x_coord = 30 * random.randint(1, 9) # [30,270]
             y_coord = 30 * random.randint(0, 9) # [0,270]
@@ -266,16 +268,25 @@ def create_snakes(number_of_snakes, snake_length):
     
     # shuffle x and y coord lists so in case we have less than 8 snakes, they can spawn at random octants
     # Using zip() + shuffle() + * operator to maintain list order consistency between the two
-    print(snake_locations_x, snake_locations_y)
     temp = list(zip(snake_locations_x, snake_locations_y))
     random.shuffle(temp)
     snake_locations_x, snake_locations_y = zip(*temp)
-    print(snake_locations_x, snake_locations_y)
 
+    # snakes can spawn over other snakes, and their body can be out of screen
+    # but their heads will always be inthe window
     for j in range(number_of_snakes):
-        #snake_length = random.randit(0,5)
+        # get a random direction for where the body will spawn
+        body_spawn_direction = random.randint(1,4) # 1 = top, 2 = bottom, 3 = left, 4 = right
+        print("snake " + str(j) + " spawned " + str(body_spawn_direction))
         for i in range(0, snake_length):
-            snakes[j].append(pygame.Rect(snake_locations_x[j] - BLOCK_WIDTH - (30 * i), snake_locations_y[j], BLOCK_WIDTH, BLOCK_HEIGHT)) #note: this spawns them horizontally and to the left of the head
+            if body_spawn_direction == 1:
+                snakes[j].append(pygame.Rect(snake_locations_x[j] - BLOCK_WIDTH - (30 * i), snake_locations_y[j], BLOCK_WIDTH, BLOCK_HEIGHT)) #note: this spawns them horizontally and to the left of the head
+            if body_spawn_direction == 2:
+                snakes[j].append(pygame.Rect(snake_locations_x[j] - BLOCK_WIDTH + (30 * i), snake_locations_y[j], BLOCK_WIDTH, BLOCK_HEIGHT)) # spawns to right
+            if body_spawn_direction == 3:  
+                snakes[j].append(pygame.Rect(snake_locations_x[j] - BLOCK_WIDTH, snake_locations_y[j] + (30 * i), BLOCK_WIDTH, BLOCK_HEIGHT)) # spawns to bottom  
+            if body_spawn_direction == 4:    
+                snakes[j].append(pygame.Rect(snake_locations_x[j] - BLOCK_WIDTH, snake_locations_y[j] - (30 * i), BLOCK_WIDTH, BLOCK_HEIGHT)) # spawns to top
 
     return snakes
 
@@ -343,7 +354,7 @@ def main():
     number_of_power_ups_dropped = 0
 
     number_of_snakes = 8
-    snake_length = 1
+    snake_length = 5
     snakes = create_snakes(number_of_snakes, snake_length)
     snakes_killed = 0
 
@@ -410,7 +421,7 @@ def main():
         if time_control % 40 == 0: # controls how fast the snake can move
             direction = snake_ai(snakes, food)
             prev_direction = direction
-            #snake_movement(snakes, direction)
+            snake_movement(snakes, direction)
 
         if time_control % 60 == 0: # add score every second
             time += 1
