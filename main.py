@@ -185,7 +185,7 @@ def snake_ai(snakes, food, prev_directions):
             if kill == 0:
                 if abs(setup_position_x_diff) > BLOCK_WIDTH :
                     if setup_position_x_diff >= 0:
-                        if snakes[i][0].x + BLOCK_WIDTH == snakes[i][1].x:
+                        if snakes[i][0].x + BLOCK_WIDTH == snakes[i][1].x or snakes[i][0].x + BLOCK_WIDTH == WIDTH:
                             # make srue snakes doesn't go out of bounds
                             if snakes[i][0].y + BLOCK_HEIGHT > HEIGHT:
                                 direction_to_append = 0
@@ -197,7 +197,7 @@ def snake_ai(snakes, food, prev_directions):
                         else:
                             direction_to_append = 90
                     else:
-                        if snakes[i][0].x - BLOCK_WIDTH == snakes[i][1].x:
+                        if snakes[i][0].x - BLOCK_WIDTH == snakes[i][1].x or snakes[i][0].x - BLOCK_WIDTH == 0:
                             # make sure snake doesn't go out of bounds
                             if snakes[i][0].y + BLOCK_HEIGHT > HEIGHT:
                                 direction_to_append = 0
@@ -210,7 +210,7 @@ def snake_ai(snakes, food, prev_directions):
                             direction_to_append = 270 
                 else:
                     if setup_position_y_diff >= 0: 
-                        if snakes[i][0].y + BLOCK_WIDTH == snakes[i][1].y:
+                        if snakes[i][0].y + BLOCK_HEIGHT == snakes[i][1].y or snakes[i][0].y + BLOCK_HEIGHT == HEIGHT:
                             if snakes[i][0].x + BLOCK_WIDTH > WIDTH:
                                 direction_to_append = 90
                             elif snakes[i][0].x + BLOCK_WIDTH < 0:
@@ -221,7 +221,7 @@ def snake_ai(snakes, food, prev_directions):
                         else:   
                             direction_to_append = 180  
                     else:    
-                        if snakes[i][0].y - BLOCK_WIDTH == snakes[i][1].y:
+                        if snakes[i][0].y - BLOCK_HEIGHT == snakes[i][1].y or snakes[i][0].y - BLOCK_HEIGHT == 0:
                             if snakes[i][0].x + BLOCK_WIDTH > WIDTH:
                                 direction_to_append = 90
                             elif snakes[i][0].x + BLOCK_WIDTH < 0:
@@ -241,7 +241,7 @@ def snake_ai(snakes, food, prev_directions):
                 print("killing")
                 if abs(x_diff) > abs(y_diff):
                     if x_diff >= 0:
-                        if snakes[i][0].x + BLOCK_WIDTH == snakes[i][1].x:
+                        if snakes[i][0].x + BLOCK_WIDTH == snakes[i][1].x or snakes[i][0].x + BLOCK_WIDTH == WIDTH:
                             # make srue snakes doesn't go out of bounds
                             if snakes[i][0].y + BLOCK_HEIGHT > HEIGHT:
                                 direction_to_append = 0
@@ -251,9 +251,9 @@ def snake_ai(snakes, food, prev_directions):
                                 direction_to_append = random.choice([0,180])
                             print("forced to go up or down")
                         else:
-                            direction_to_append = 90 # NEED TO MAKE SURE THIS DOESN'T GO OFF THE SCREEN TO THE LEFT
+                            direction_to_append = 90 # NEED TO MAKE SURE THIS DOESN'T GO OFF THE SCREEN TO THE RIGHT
                     else:
-                        if snakes[i][0].x - BLOCK_WIDTH == snakes[i][1].x:
+                        if snakes[i][0].x - BLOCK_WIDTH == snakes[i][1].x or snakes[i][0].x - BLOCK_WIDTH == WIDTH:
                             # make sure snake doesn't go out of bounds
                             if snakes[i][0].y + BLOCK_HEIGHT > HEIGHT:
                                 direction_to_append = 0
@@ -263,10 +263,10 @@ def snake_ai(snakes, food, prev_directions):
                                 direction_to_append = random.choice([0,180])
                             print("forced to go up or down")   
                         else:
-                            direction_to_append = 270 # NEED TO MAKE SURE THIS DOESN'T GO OFF THE SCREEN TO THE RIGHT
+                            direction_to_append = 270 # NEED TO MAKE SURE THIS DOESN'T GO OFF THE SCREEN TO THE LEFT
                 else:
                     if y_diff >= 0: 
-                        if snakes[i][0].y + BLOCK_WIDTH == snakes[i][1].y:
+                        if snakes[i][0].y + BLOCK_WIDTH == snakes[i][1].y or snakes[i][0].y + BLOCK_HEIGHT == HEIGHT:
                             if snakes[i][0].x + BLOCK_WIDTH > WIDTH:
                                 direction_to_append = 90
                             elif snakes[i][0].x + BLOCK_WIDTH < 0:
@@ -277,7 +277,7 @@ def snake_ai(snakes, food, prev_directions):
                         else:   
                             direction_to_append = 180  
                     else:    
-                        if snakes[i][0].y - BLOCK_WIDTH == snakes[i][1].y:
+                        if snakes[i][0].y - BLOCK_WIDTH == snakes[i][1].y or snakes[i][0].y - BLOCK_HEIGHT == 0:
                             if snakes[i][0].x + BLOCK_WIDTH > WIDTH:
                                 direction_to_append = 90
                             elif snakes[i][0].x + BLOCK_WIDTH < 0:
@@ -401,7 +401,7 @@ def snake_ai(snakes, food, prev_directions):
                     direction_to_append = 180
                 else:    
                     direction_to_append = 0
-        elif i == 7:
+        elif i == 7: # patrolling snake 
             if abs(x_diff) > abs(y_diff):
                 if x_diff >= 0:
                     direction_to_append = 90 
