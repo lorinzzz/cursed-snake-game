@@ -30,6 +30,7 @@ STAMINA = 100
 FPS = 60
 REGENERATE_STAMINA = 1000 #regenerate stamina every second
 USE_STAMINA = 20 # drain a percentage of stamina every 20ms == depletes full bar in 2 seconds
+POISON_DURATION = 5000 # only get 5seconds to use the poison
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 FORTY_FIVE_SECONDS = 2700 # 2700/60 = 45
@@ -73,6 +74,11 @@ POISON_PWR_UP = pygame.transform.scale(POISON_PWR_UP_IMG, (BLOCK_WIDTH, BLOCK_HE
 
 # function to spawn snake head with appropriate image orientation based on movement direction
 def spawn_snake_head(direction):
+    #pygame has these flipped
+    if direction == 270:
+        direction = 90
+    elif direction == 90:
+        direction = 270
     SNAKE_HEAD = pygame.transform.rotate(pygame.transform.scale(SNAKE_HEAD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT)), direction)
     return SNAKE_HEAD
 
@@ -151,99 +157,213 @@ def food_movement(keys_pressed, food, sprint_stamina):
 # not coding for snake vs another snake collision is much easier
 # check if snake does not collide itself ORRRR
 # snake cannot make full 180 degree turns but can be allowed to have at MAX one collision 
-def snake_ai(snakes, food):
+def snake_ai(snakes, food, prev_directions):
     direction = []
+    direction_to_append = -1
     for i in range(len(snakes)):
         x_diff = food.x - snakes[i][0].x
         y_diff = food.y - snakes[i][0].y
         if i == 0: # shortest path to food AI
-            if abs(x_diff) > abs(y_diff):
-                if x_diff >= 0:
-                    direction.append(270)        
+            setup_position_x = food.x - 120
+            setup_position_y = food.y - 120
+            global kill 
+            global move
+            setup_position_x_diff = setup_position_x - snakes[i][0].x
+            setup_position_y_diff = setup_position_y - snakes[i][0].y
+
+            if kill == 0:
+                if abs(setup_position_x_diff) > abs(setup_position_y_diff):
+                    if setup_position_x_diff >= 0:
+                        if snakes[i][0].x + BLOCK_WIDTH == snakes[i][1].x:
+                            # make srue snakes doesn't go out of bounds
+                            if snakes[i][0].y + BLOCK_HEIGHT > HEIGHT:
+                                direction_to_append = 0
+                            elif snakes[i][0].y + BLOCK_HEIGHT < 0:
+                                direction_to_append = 180
+                            elif snakes[i][0].y + BLOCK_HEIGHT <= HEIGHT and snakes[i][0].y + BLOCK_HEIGHT >= 0:
+                                direction_to_append = random.choice([0,180])
+                            print("forced to go up or down")
+                        else:
+                            direction_to_append = 90
+                    else:
+                        if snakes[i][0].x - BLOCK_WIDTH == snakes[i][1].x:
+                            # make sure snake doesn't go out of bounds
+                            if snakes[i][0].y + BLOCK_HEIGHT > HEIGHT:
+                                direction_to_append = 0
+                            elif snakes[i][0].y + BLOCK_HEIGHT < 0:
+                                direction_to_append = 180
+                            elif snakes[i][0].y + BLOCK_HEIGHT <= HEIGHT and snakes[i][0].y + BLOCK_HEIGHT >= 0:
+                                direction_to_append = random.choice([0,180])
+                            print("forced to go up or down")   
+                        else:
+                            direction_to_append = 270 
                 else:
-                    direction.append(90)
-            else:
-                if y_diff >= 0: 
-                    direction.append(180)
-                else:    
-                    direction.append(0)
-        elif i == 1: # match x values before going left or right 
+                    if setup_position_y_diff >= 0: 
+                        if snakes[i][0].y + BLOCK_WIDTH == snakes[i][1].y:
+                            if snakes[i][0].x + BLOCK_WIDTH > WIDTH:
+                                direction_to_append = 90
+                            elif snakes[i][0].x + BLOCK_WIDTH < 0:
+                                direction_to_append = 270
+                            elif snakes[i][0].x + BLOCK_WIDTH <= WIDTH and snakes[i][0].x + BLOCK_WIDTH >= 0:
+                                direction_to_append = random.choice([90,270])
+                            print("forced to go left or right")    
+                        else:   
+                            direction_to_append = 180  
+                    else:    
+                        if snakes[i][0].y - BLOCK_WIDTH == snakes[i][1].y:
+                            if snakes[i][0].x + BLOCK_WIDTH > WIDTH:
+                                direction_to_append = 90
+                            elif snakes[i][0].x + BLOCK_WIDTH < 0:
+                                direction_to_append = 270
+                            elif snakes[i][0].x + BLOCK_WIDTH <= WIDTH and snakes[i][0].x + BLOCK_WIDTH >= 0:
+                                direction_to_append = random.choice([90,270])
+                            print("forced to go left or right")
+                        else:
+                            direction_to_append = 0  
+
+            # check if snake is in position to attack        
+            if snakes[i][0].x >= setup_position_x - BLOCK_WIDTH and snakes[i][0].x <= setup_position_x + BLOCK_WIDTH and snakes[i][0].y >= setup_position_y - BLOCK_HEIGHT and snakes[i][0].y <= setup_position_y + BLOCK_HEIGHT and kill == 0:
+                kill = 1
+                print("in position!")
+                print(kill)
+            if kill == 1:
+                print("killing")
+                if abs(x_diff) > abs(y_diff):
+                    if x_diff >= 0:
+                        direction_to_append = 90
+                    else:
+                        direction_to_append = 270 
+                else:
+                    if y_diff >= 0: 
+                        direction_to_append = 180  
+                    else:    
+                        direction_to_append = 0  
+                if move == 20:
+                    kill = 0
+                    move = 0  
+                    print("set up mode") 
+                move += 1
+                
+                
+                                
+        elif i == 1: # match x values before going up or down 
             if abs(x_diff) > BLOCK_WIDTH: 
                 if x_diff >= 0:
-                    direction.append(270)        
+                    # make sure snake doesn't commit a full 180 turn into its own body
+                    if snakes[i][0].x + BLOCK_WIDTH == snakes[i][1].x:
+                        # make srue snakes doesn't go out of bounds
+                        if snakes[i][0].y + BLOCK_HEIGHT > HEIGHT:
+                            direction_to_append = 0
+                        elif snakes[i][0].y + BLOCK_HEIGHT < 0:
+                            direction_to_append = 180
+                        elif snakes[i][0].y + BLOCK_HEIGHT <= HEIGHT and snakes[i][0].y + BLOCK_HEIGHT >= 0:
+                            direction_to_append = random.choice([0,180])
+                        print("forced to go up or down")
+                    else:
+                        direction_to_append = 90
                 else:
-                    direction.append(90)
+                    if snakes[i][0].x - BLOCK_WIDTH == snakes[i][1].x:
+                        # make sure snake doesn't go out of bounds
+                        if snakes[i][0].y + BLOCK_HEIGHT > HEIGHT:
+                            direction_to_append = 0
+                        elif snakes[i][0].y + BLOCK_HEIGHT < 0:
+                            direction_to_append = 180
+                        elif snakes[i][0].y + BLOCK_HEIGHT <= HEIGHT and snakes[i][0].y + BLOCK_HEIGHT >= 0:
+                            direction_to_append = random.choice([0,180])
+                        print("forced to go up or down")   
+                    else:
+                        direction_to_append = 270                   
             else:
                 if y_diff >= 0: 
-                    direction.append(180)
+                    direction_to_append = 180
                 else:    
-                    direction.append(0)
-        elif i == 2:   # match y values before going up or down
+                    direction_to_append = 0
+        elif i == 2:   # match y values before left or right
             if abs(y_diff) > BLOCK_HEIGHT:
-                if y_diff >= 0:
-                    direction.append(180)        
-                else:
-                    direction.append(0)
+                if y_diff >= 0:  
+                    if snakes[i][0].y + BLOCK_WIDTH == snakes[i][1].y:
+                        if snakes[i][0].x + BLOCK_WIDTH > WIDTH:
+                            direction_to_append = 90
+                        elif snakes[i][0].x + BLOCK_WIDTH < 0:
+                            direction_to_append = 270
+                        elif snakes[i][0].x + BLOCK_WIDTH <= WIDTH and snakes[i][0].x + BLOCK_WIDTH >= 0:
+                            direction_to_append = random.choice([90,270])
+                        print("forced to go left or right")    
+                    else:   
+                        direction_to_append = 180                 
+                else:    
+                    if snakes[i][0].y - BLOCK_WIDTH == snakes[i][1].y:
+                        if snakes[i][0].x + BLOCK_WIDTH > WIDTH:
+                            direction_to_append = 90
+                        elif snakes[i][0].x + BLOCK_WIDTH < 0:
+                            direction_to_append = 270
+                        elif snakes[i][0].x + BLOCK_WIDTH <= WIDTH and snakes[i][0].x + BLOCK_WIDTH >= 0:
+                            direction_to_append = random.choice([90,270])
+                        print("forced to go left or right")
+                    else:
+                        direction_to_append = 0                  
             else:
                 if x_diff >= 0: 
-                    direction.append(270)
-                else:    
-                    direction.append(90)   
-        elif i == 3: # testing: goal of this snake is to always be at the upper left from the food
+                    direction_to_append = 90 
+                else:
+                    direction_to_append = 270 
+        elif i == 3: # testing: goal of this snake is to always be at the upper left from the food before going in for the kill
+            # positions top left of food for where the snake should move into place to setup kill phase
             if abs(x_diff) > abs(y_diff):
                 if x_diff >= 0:
-                    direction.append(270)        
+                    direction_to_append = 90 
                 else:
-                    direction.append(90)
+                    direction_to_append = 270
             else:
                 if y_diff >= 0: 
-                    direction.append(180)
+                    direction_to_append = 180
                 else:    
-                    direction.append(0)
-        elif i == 4:
+                    direction_to_append = 0
+        elif i == 4: 
             if abs(x_diff) > abs(y_diff):
                 if x_diff >= 0:
-                    direction.append(270)        
+                    direction_to_append = 90 
                 else:
-                    direction.append(90)
+                    direction_to_append = 270
             else:
                 if y_diff >= 0: 
-                    direction.append(180)
+                    direction_to_append = 180
                 else:    
-                    direction.append(0)
+                    direction_to_append = 0
         elif i == 5:
             if abs(x_diff) > abs(y_diff):
                 if x_diff >= 0:
-                    direction.append(270)        
+                    direction_to_append = 90 
                 else:
-                    direction.append(90)
+                    direction_to_append = 270
             else:
                 if y_diff >= 0: 
-                    direction.append(180)
+                    direction_to_append = 180
                 else:    
-                    direction.append(0)
-        elif i == 6:
+                    direction_to_append = 0
+        elif i == 6: 
             if abs(x_diff) > abs(y_diff):
                 if x_diff >= 0:
-                    direction.append(270)        
+                    direction_to_append = 90 
                 else:
-                    direction.append(90)
+                    direction_to_append = 270
             else:
                 if y_diff >= 0: 
-                    direction.append(180)
+                    direction_to_append = 180
                 else:    
-                    direction.append(0)
+                    direction_to_append = 0
         elif i == 7:
             if abs(x_diff) > abs(y_diff):
                 if x_diff >= 0:
-                    direction.append(270)        
+                    direction_to_append = 90 
                 else:
-                    direction.append(90)
+                    direction_to_append = 270
             else:
                 if y_diff >= 0: 
-                    direction.append(180)
+                    direction_to_append = 180
                 else:    
-                    direction.append(0)
+                    direction_to_append = 0
+        direction.append(direction_to_append)
         
 
 
@@ -258,9 +378,9 @@ def snake_movement(snakes, direction):
             snakes[x][0].y -= BLOCK_WIDTH
         elif direction[x] == 180:
             snakes[x][0].y += BLOCK_WIDTH    
-        elif direction[x] == 90:
-            snakes[x][0].x -= BLOCK_WIDTH
         elif direction[x] == 270:
+            snakes[x][0].x -= BLOCK_WIDTH
+        elif direction[x] == 90:
             snakes[x][0].x += BLOCK_WIDTH
 
 # handles collision of food, snake, and poison objects in window
@@ -368,7 +488,7 @@ def create_snakes(number_of_snakes, snake_length):
     # snakes can spawn over other snakes, and their body can be out of screen
     # but their heads will always be inthe window
     for j in range(number_of_snakes):
-        # get a random direction for where the body will spawn
+        # get a random direction for orientation of body 
         body_spawn_direction = random.randint(1,4) # 1 = top, 2 = bottom, 3 = left, 4 = right
         print("snake " + str(j) + " spawned " + str(body_spawn_direction))
         for i in range(0, snake_length):
@@ -423,6 +543,10 @@ def get_bullet_direction(keys_pressed):
 def main():
     pygame.init()
 
+    global kill, move
+    kill = 0
+    move = 0
+
     food = pygame.Rect(450 - BLOCK_WIDTH//2, 450 - BLOCK_HEIGHT//2, BLOCK_WIDTH, BLOCK_HEIGHT)
     power_up = pygame.Rect(30 * random.randint(0, 29), 30 * random.randint(0, 29), BLOCK_WIDTH, BLOCK_HEIGHT)
 
@@ -434,11 +558,13 @@ def main():
     time = 0
 
     sprint_stamina = STAMINA
-    poison = 0
+    poison = 0 
+
+    prev_directions = [] # list to hold several old direction lists ... [ [snakes_directions1,], .. , [snakes_directions5] ] ex: to access snake 4's antepenultimate move: prev_directions[2][3]
 
     end_game = 0
 
-    snake_speed = 40 # lower is faster
+    snake_speed = 25 # lower is faster
 
     food_bullets = []
     activate_bullet = 0
@@ -448,7 +574,7 @@ def main():
     drop_power_up = random.randint(0, FORTY_FIVE_SECONDS) # 0 to 45 seconds, 750 is adjusted for the framerate (45*60 = 2700)
     number_of_power_ups_dropped = 0
 
-    number_of_snakes = 3
+    number_of_snakes = 1
     snake_length = 5
     snakes = create_snakes(number_of_snakes, snake_length)
     snakes_killed = 0
@@ -464,6 +590,7 @@ def main():
             
             if event.type == activate_poison_event:
                 poison = 1
+                pygame.time.set_timer(poison_used_event, POISON_DURATION)
                 POISON_POWER_UP_SOUND.play()
 
             if event.type == activate_sprint_recharge_event:
@@ -514,8 +641,13 @@ def main():
         power_up_status[1] = handle_food_power_up_collision(food, power_up, power_up_status)
 
         if time_control % snake_speed == 0: # controls how fast the snake can move
-            direction = snake_ai(snakes, food)
-            prev_direction = direction
+            direction = snake_ai(snakes, food, prev_directions) # returns a list of directions for snakes
+
+            # if list contains 5 direction lists, pop the last to make room for the next 
+            if len(prev_directions) == 5: 
+                prev_directions.pop()
+
+            prev_directions.insert(0, direction)
             snake_movement(snakes, direction)
 
         if time_control % 60 == 0: # add score every second
