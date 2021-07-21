@@ -78,13 +78,13 @@ def spawn_snake_head(direction):
 
 def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_stamina, snakes, direction, time, snakes_killed):
     WIN.fill(BLACK)
-    sprint_bar = pygame.font.SysFont('comicsans', 40).render("Sprint: " + str(sprint_stamina), 1, WHITE)
+    sprint_bar = pygame.font.SysFont('comicsans', 30).render("Sprint: " + str(sprint_stamina), 1, WHITE)
     sprint_bar.set_alpha(150)
     WIN.blit(sprint_bar, (10, 10))
-    time_disp = pygame.font.SysFont('comicsans', 40).render("Time: " + str(time), 1, WHITE)
+    time_disp = pygame.font.SysFont('comicsans', 30).render("Time: " + str(time), 1, WHITE)
     time_disp.set_alpha(150)
     WIN.blit(time_disp, (WIDTH - time_disp.get_width() - 10, 10))
-    snakes_killed_disp = pygame.font.SysFont('comicsans', 40).render("Snakes Killed: " + str(snakes_killed), 1, WHITE)
+    snakes_killed_disp = pygame.font.SysFont('comicsans', 30).render("Snakes Killed: " + str(snakes_killed), 1, WHITE)
     snakes_killed_disp.set_alpha(150)
     WIN.blit(snakes_killed_disp, (WIDTH - snakes_killed_disp.get_width() - 10, 40))
     if poison == 1:
@@ -92,6 +92,7 @@ def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_st
     elif poison == 0:
             WIN.blit(FOOD, (food.x, food.y))
 
+    # display power up pickups
     if power_up_status[1] == 1:
         if power_up_status[0] == 1:
             WIN.blit(SPRINT_PWR_UP, (power_up.x, power_up.y))
@@ -108,6 +109,7 @@ def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_st
             elif i > 0:
                 WIN.blit(SNAKE_BODY, (snakes[x][i].x, snakes[x][i].y))
 
+    # display projectiles from using the shoot power up
     for bullet in food_bullets:
         pygame.draw.rect(WIN, (255,0,0), bullet)
 
@@ -143,22 +145,107 @@ def food_movement(keys_pressed, food, sprint_stamina):
             food.y += VEL + sprint - slow_movement
 
 # handles the movement of the snake head
+# make sure none of these movements result in a snake going out of bounds, or running into itself 
+# maybe consider if snakes collide, their movement speeds are slowed? 
+# would be much easier to code rather than checking if every move will result in a collision with antother snake and having to figure out another move
+# not coding for snake vs another snake collision is much easier
+# check if snake does not collide itself ORRRR
+# snake cannot make full 180 degree turns but can be allowed to have at MAX one collision 
 def snake_ai(snakes, food):
     direction = []
     for i in range(len(snakes)):
         x_diff = food.x - snakes[i][0].x
         y_diff = food.y - snakes[i][0].y
-
-        if abs(x_diff) > abs(y_diff):
-            if x_diff >= 0:
-                direction.append(270)        
+        if i == 0: # shortest path to food AI
+            if abs(x_diff) > abs(y_diff):
+                if x_diff >= 0:
+                    direction.append(270)        
+                else:
+                    direction.append(90)
             else:
-                direction.append(90)
-        else:
-            if y_diff >= 0: 
-                direction.append(180)
-            else:    
-                direction.append(0)
+                if y_diff >= 0: 
+                    direction.append(180)
+                else:    
+                    direction.append(0)
+        elif i == 1: # match x values before going left or right 
+            if abs(x_diff) > BLOCK_WIDTH: 
+                if x_diff >= 0:
+                    direction.append(270)        
+                else:
+                    direction.append(90)
+            else:
+                if y_diff >= 0: 
+                    direction.append(180)
+                else:    
+                    direction.append(0)
+        elif i == 2:   # match y values before going up or down
+            if abs(y_diff) > BLOCK_HEIGHT:
+                if y_diff >= 0:
+                    direction.append(180)        
+                else:
+                    direction.append(0)
+            else:
+                if x_diff >= 0: 
+                    direction.append(270)
+                else:    
+                    direction.append(90)   
+        elif i == 3: # testing: goal of this snake is to always be at the upper left from the food
+            if abs(x_diff) > abs(y_diff):
+                if x_diff >= 0:
+                    direction.append(270)        
+                else:
+                    direction.append(90)
+            else:
+                if y_diff >= 0: 
+                    direction.append(180)
+                else:    
+                    direction.append(0)
+        elif i == 4:
+            if abs(x_diff) > abs(y_diff):
+                if x_diff >= 0:
+                    direction.append(270)        
+                else:
+                    direction.append(90)
+            else:
+                if y_diff >= 0: 
+                    direction.append(180)
+                else:    
+                    direction.append(0)
+        elif i == 5:
+            if abs(x_diff) > abs(y_diff):
+                if x_diff >= 0:
+                    direction.append(270)        
+                else:
+                    direction.append(90)
+            else:
+                if y_diff >= 0: 
+                    direction.append(180)
+                else:    
+                    direction.append(0)
+        elif i == 6:
+            if abs(x_diff) > abs(y_diff):
+                if x_diff >= 0:
+                    direction.append(270)        
+                else:
+                    direction.append(90)
+            else:
+                if y_diff >= 0: 
+                    direction.append(180)
+                else:    
+                    direction.append(0)
+        elif i == 7:
+            if abs(x_diff) > abs(y_diff):
+                if x_diff >= 0:
+                    direction.append(270)        
+                else:
+                    direction.append(90)
+            else:
+                if y_diff >= 0: 
+                    direction.append(180)
+                else:    
+                    direction.append(0)
+        
+
 
     return direction
  
@@ -234,9 +321,15 @@ def create_snakes(number_of_snakes, snake_length):
     snakes = []
     snake_locations_x = []
     snake_locations_y = []
+
+    # for later on when randomizing snake lengths 
+    random_snake_lengths = [] 
+
     x_coord, y_coord = 0, 0
     for x in range(number_of_snakes):
         snakes.append([])
+        random_snake_lengths.append(random.randint(1,10))
+        print(random_snake_lengths)
     for k in range(MAX_SNAKES):
        #generate random coordinate to spawn snakehead in each coord
         if k == 0: # octant 1 
@@ -345,6 +438,8 @@ def main():
 
     end_game = 0
 
+    snake_speed = 40 # lower is faster
+
     food_bullets = []
     activate_bullet = 0
     bullet_direction = 0
@@ -353,7 +448,7 @@ def main():
     drop_power_up = random.randint(0, FORTY_FIVE_SECONDS) # 0 to 45 seconds, 750 is adjusted for the framerate (45*60 = 2700)
     number_of_power_ups_dropped = 0
 
-    number_of_snakes = 8
+    number_of_snakes = 3
     snake_length = 5
     snakes = create_snakes(number_of_snakes, snake_length)
     snakes_killed = 0
@@ -418,7 +513,7 @@ def main():
             pygame.time.set_timer(disable_power_up_event, POWER_UP_TIME) # set timer
         power_up_status[1] = handle_food_power_up_collision(food, power_up, power_up_status)
 
-        if time_control % 40 == 0: # controls how fast the snake can move
+        if time_control % snake_speed == 0: # controls how fast the snake can move
             direction = snake_ai(snakes, food)
             prev_direction = direction
             snake_movement(snakes, direction)
