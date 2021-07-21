@@ -112,7 +112,7 @@ def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_st
         for i in range(len(snakes[x])):
             if i == 0:
                 WIN.blit(spawn_snake_head(direction[i]), (snakes[x][i].x, snakes[x][i].y))
-            elif i > 0:
+            if i > 0:
                 WIN.blit(SNAKE_BODY, (snakes[x][i].x, snakes[x][i].y))
 
     # display projectiles from using the shoot power up
@@ -164,8 +164,8 @@ def snake_ai(snakes, food, prev_directions):
         x_diff = food.x - snakes[i][0].x
         y_diff = food.y - snakes[i][0].y
         if i == 0: # shortest path to food AI
-            setup_position_x = food.x - 120
-            setup_position_y = food.y - 120
+            setup_position_x = food.x - 150
+            setup_position_y = food.y - 150
             global kill 
             global move
             setup_position_x_diff = setup_position_x - snakes[i][0].x
@@ -238,7 +238,7 @@ def snake_ai(snakes, food, prev_directions):
                         direction_to_append = 180  
                     else:    
                         direction_to_append = 0  
-                if move == 20:
+                if move == 25:
                     kill = 0
                     move = 0  
                     print("set up mode") 
@@ -668,7 +668,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# 7/18/21
-# Notes: Need to work on the spawning and AI of snakes
