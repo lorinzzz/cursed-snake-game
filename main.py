@@ -159,8 +159,8 @@ def food_movement(keys_pressed, food, sprint_stamina):
 # not coding for snake vs another snake collision is much easier
 # check if snake does not collide itself ORRRR
 # snake cannot make full 180 degree turns but can be allowed to have at MAX one collision 
-def snake_ai(snakes, food):
-    return ai.execute_ai(snakes,food)
+#def snake_ai(snakes, food):
+#    return ai.execute_ai(snakes,food)
  
 def snake_movement(snakes, direction):
     for x in range(len(snakes)):
@@ -337,14 +337,11 @@ def get_bullet_direction(keys_pressed):
         bullet_direction = random.choice([0,90,180,270])  
     return bullet_direction
 
-ai = SnakeAI()
+
 
 def main():
+    snake_ai = SnakeAI()
     pygame.init()
-
-    global kill
-    global move
-    kill, move = 0, 0
     
     food = pygame.Rect(450 - BLOCK_WIDTH//2, 450 - BLOCK_HEIGHT//2, BLOCK_WIDTH, BLOCK_HEIGHT)
     power_up = pygame.Rect(30 * random.randint(0, 29), 30 * random.randint(0, 29), BLOCK_WIDTH, BLOCK_HEIGHT)
@@ -438,7 +435,7 @@ def main():
         power_up_status[1] = handle_food_power_up_collision(food, power_up, power_up_status)
 
         if time_control % snake_speed == 0: # controls how fast the snake can move
-            direction = snake_ai(snakes, food) # returns a list of directions for snakes
+            direction = snake_ai.execute_ai(snakes,food) # returns a list of directions for snakes
             snake_movement(snakes, direction)
 
         if time_control % 60 == 0: # add score every second
