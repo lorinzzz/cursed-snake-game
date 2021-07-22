@@ -337,7 +337,9 @@ def get_bullet_direction(keys_pressed):
         bullet_direction = random.choice([0,90,180,270])  
     return bullet_direction
 
-
+# player can customize snake speed, number of snakes, whether to have all snakes the same length, or to randomize the snake lengths
+# when randomizing snake lengths, perhaps have an interval of lenghts to randomize from or no constraints
+# In the future maybe add ability for snakes to respawn and have it toggleable 
 
 def main():
     snake_ai = SnakeAI()
@@ -368,7 +370,7 @@ def main():
     drop_power_up = random.randint(0, FORTY_FIVE_SECONDS) # 0 to 45 seconds, 750 is adjusted for the framerate (45*60 = 2700)
     number_of_power_ups_dropped = 0
 
-    number_of_snakes = 4
+    number_of_snakes = 5
     snake_length = 6
     snakes = create_snakes(number_of_snakes, snake_length)
     snakes_killed = 0

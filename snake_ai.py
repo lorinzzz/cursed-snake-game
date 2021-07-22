@@ -25,19 +25,18 @@ class SnakeAI:
         self.random_path_choice3 = random.choice([1,2,3])
         self.random_path_choice4 = random.choice([1,2,3])
         self.random_indices = [0,1,2,3]
-        random.shuffle(self.random_indices)
+        random.shuffle(self.random_indices) # for random paths in flanking ai
         
     def execute_ai(self, snakes, food): # executes ai and returns a list of directions
         directions = [] 
         for i in range(len(snakes)):
             if i < 4:
-                directions.append(self.flanking_ai(snakes, food, i))               
+                directions.append(self.flanking_ai(snakes, food, i))
+            if i == 4:
+                directions.append(self.line_up_ai(snakes, food, i, random.choice([0,1])))                
         return directions 
-        
-        
+            
     def flanking_ai(self, snakes, food, i): # covers up to 4 snakes
-        
-        
         if i == self.random_indices[0]:
             setup_position_x = food.x + (BLOCK_WIDTH * self.offset)
             setup_position_y = food.y + (BLOCK_HEIGHT * self.offset)
@@ -54,12 +53,6 @@ class SnakeAI:
             setup_position_x = food.x - (BLOCK_WIDTH * self.offset)
             setup_position_y = food.y - (BLOCK_HEIGHT * self.offset)     
             path_choice = self.random_path_choice4                             
-            
-        setup_position_x_diff = setup_position_x - snakes[i][0].x
-        setup_position_y_diff = setup_position_y - snakes[i][0].y
-        x_diff = food.x - snakes[i][0].x
-        y_diff = food.y - snakes[i][0].y
-        
         
         if (i == 0 and self.s1_kill == 0) or (i == 1 and self.s2_kill == 0) or (i == 2 and self.s3_kill == 0) or (i == 3 and self.s4_kill == 0):
             if path_choice == 1:
@@ -68,6 +61,7 @@ class SnakeAI:
                 direction_to_append = self.shortest_path_ai(snakes, food, i, setup_position_x, setup_position_y)
             if path_choice == 3:
                 direction_to_append = self.line_up_ai(snakes, food, i, 1, setup_position_x, setup_position_y)
+                
         # check if snake is in position to attack        
         if (i == 0 and snakes[i][0].x >= setup_position_x - BLOCK_WIDTH and snakes[i][0].x <= setup_position_x + BLOCK_WIDTH and snakes[i][0].y >= setup_position_y - BLOCK_HEIGHT and snakes[i][0].y <= setup_position_y + BLOCK_HEIGHT and self.s1_kill == 0):
             self.s1_kill = 1
@@ -85,7 +79,6 @@ class SnakeAI:
             
         # kil mode: moves to eat the food
         if (i == 0 and self.s1_kill == 1) or (i == 1 and self.s2_kill == 1) or (i == 2 and self.s3_kill == 1) or (i == 3 and self.s4_kill == 1):
-
             if path_choice == 1: # shortest path 
                 direction_to_append = self.shortest_path_ai(snakes, food, i)
             elif path_choice == 2: # vertical line up
@@ -116,7 +109,7 @@ class SnakeAI:
                     self.s4_move = 0
                     print("snake " + str(i) + " in set up mode") 
                 self.s4_move += 1                   
-                    
+                   
         return direction_to_append
         
     def shortest_path_ai(self, snakes, food, i, setup_position_x = -1, setup_position_y = -1): # ai for shortest path to food
@@ -151,9 +144,7 @@ class SnakeAI:
             y_diff = setup_position_y - snakes[i][0].y  
             set_up_flag = 1          
         if orientation == 1: # horizontal
-            print("here10")
             if abs(x_diff) > BLOCK_WIDTH: 
-                print("here11")
                 if x_diff >= 0:
                     # make sure snake doesn't commit a full 180 turn into its own body
                     if snakes[i][0].x + BLOCK_WIDTH == snakes[i][1].x or snakes[i][0].x + BLOCK_WIDTH == WIDTH:
@@ -168,7 +159,6 @@ class SnakeAI:
                     else:
                         direction_to_append = 90
                     if set_up_flag == 1:
-                        print("here22")
                         if snakes[i][0].x + BLOCK_WIDTH == WIDTH:
                             direction_to_append = self.shortest_path_ai(snakes, food, i)    
                             print("forced to hunt")                         
@@ -189,7 +179,6 @@ class SnakeAI:
                             direction_to_append = self.shortest_path_ai(snakes, food, i)   
                             print("forced to hunt")                                           
             else:
-                print("here12")
                 if y_diff >= 0: 
                     if snakes[i][0].y + BLOCK_HEIGHT == snakes[i][1].y or snakes[i][0].y + BLOCK_HEIGHT == HEIGHT:
                         if snakes[i][0].x + BLOCK_WIDTH > WIDTH:
@@ -220,14 +209,10 @@ class SnakeAI:
                         if snakes[i][0].y - BLOCK_HEIGHT == 0:
                             direction_to_append = self.shortest_path_ai(snakes, food, i)
                             print("forced to hunt")                         
-                        
-                        
+                                             
         elif orientation == 0: # vertical
-            print("here")
             if abs(y_diff) > BLOCK_WIDTH: 
-                print("here1")
                 if y_diff >= 0:
-                    print("here3")
                     if snakes[i][0].y + BLOCK_HEIGHT == snakes[i][1].y or snakes[i][0].y + BLOCK_HEIGHT == HEIGHT:
                         if snakes[i][0].x + BLOCK_WIDTH > WIDTH:
                             direction_to_append = 90
@@ -239,14 +224,11 @@ class SnakeAI:
                     else:   
                         direction_to_append = 180 
                     if set_up_flag == 1:
-                        print("here21")
                         if snakes[i][0].y + BLOCK_HEIGHT == HEIGHT:
                             direction_to_append = self.shortest_path_ai(snakes, food, i)      
                             print("forced to hunt")                          
                 else:    
-                    print("here4")
                     if snakes[i][0].y - BLOCK_HEIGHT == snakes[i][1].y or snakes[i][0].y - BLOCK_HEIGHT == 0:
-                        print("here5")
                         if snakes[i][0].x + BLOCK_WIDTH > WIDTH:
                             direction_to_append = 90
                         elif snakes[i][0].x - BLOCK_WIDTH < 0:
@@ -255,16 +237,12 @@ class SnakeAI:
                             direction_to_append = random.choice([90,270])
                         print("forced to go left or right")                       
                     else:
-                        print("here7")
                         direction_to_append = 0 
                     if set_up_flag == 1:
-                        print("here6")
                         if snakes[i][0].y - BLOCK_HEIGHT == 0:
-                            print("here8")
                             direction_to_append = self.shortest_path_ai(snakes, food, i)
                             print("forced to hunt")                                           
             else:
-                print("here2")
                 if x_diff >= 0:
                     # make sure snake doesn't commit a full 180 turn into its own body
                     if snakes[i][0].x + BLOCK_WIDTH == snakes[i][1].x or snakes[i][0].x + BLOCK_WIDTH == WIDTH:
@@ -305,3 +283,6 @@ class SnakeAI:
     
     def circling_ai(self): # ai where snake will run circles around a certain radius in the map, no real intentions to kill the food. the snake must be long however! 
         pass
+    
+    
+    #7/22/21 1:30am - note: consider adding "coin" pickups on the window to increase score, gives player an incentive to move around to specific locatins and take risks
