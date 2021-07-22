@@ -1,0 +1,4 @@
+WIDTH, HEIGHT = 900, 900
+BLOCK_WIDTH, BLOCK_HEIGHT = 30, 30
+FPS = 60
+import random
