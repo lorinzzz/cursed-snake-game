@@ -25,7 +25,7 @@ WIDTH, HEIGHT = pygame_constants.WIDTH, pygame_constants.HEIGHT
 BLOCK_WIDTH, BLOCK_HEIGHT = pygame_constants.BLOCK_WIDTH, pygame_constants.BLOCK_HEIGHT
 FPS = pygame_constants.FPS
 VEL = 2
-FOOD_BULLET_VEL = 1.5
+FOOD_BULLET_VEL = 3
 STAMINA = 100
 REGENERATE_STAMINA = 1000 #regenerate stamina every second
 USE_STAMINA = 20 # drain a percentage of stamina every 20ms == depletes full bar in 2 seconds
@@ -370,7 +370,7 @@ def main():
     drop_power_up = random.randint(0, FORTY_FIVE_SECONDS) # 0 to 45 seconds, 750 is adjusted for the framerate (45*60 = 2700)
     number_of_power_ups_dropped = 0
 
-    number_of_snakes = 5
+    number_of_snakes = 1
     snake_length = 6
     snakes = create_snakes(number_of_snakes, snake_length)
     snakes_killed = 0
