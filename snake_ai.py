@@ -31,10 +31,10 @@ class SnakeAI:
     def execute_ai(self, snakes, food): # executes ai and returns a list of directions
         directions = [] 
         for i in range(len(snakes)):
-            #if i < 4:
-            #    directions.append(self.flanking_ai(snakes, food, i))
-            if i < 2:
-                directions.append(self.line_up_ai(snakes, food, i, self.random_indices_for_orientation[i])) 
+            if i < 4:
+                directions.append(self.flanking_ai(snakes, food, i))
+            if i >= 4:
+                directions.append(self.line_up_ai(snakes, food, i, self.random_indices_for_orientation[i - 4])) 
             print(snakes[i][0].x, snakes[i][0].y)               
         return directions 
             
