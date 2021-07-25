@@ -6,20 +6,31 @@ import random
 # constants
 WIDTH, HEIGHT = pygame_constants.WIDTH, pygame_constants.HEIGHT
 BLOCK_WIDTH, BLOCK_HEIGHT = pygame_constants.BLOCK_WIDTH, pygame_constants.BLOCK_HEIGHT
+LONG_OFFSET = [30, 60, 90, 120, 150, 180, 210]
+SHORT_OFFSET = [240, 270, 300, 330, 360, 390]
+
 
 class SnakeAI:
     def __init__(self):
+        # kill state of snakes 
         self.s1_kill = 0
         self.s2_kill = 0
         self.s3_kill = 0
         self.s4_kill = 0
         
+        # hold how many moves flanking AI can make when in kill mode
         self.s1_move = 0
         self.s2_move = 0
         self.s3_move = 0
         self.s4_move = 0
         self.offset = 5
-        
+
+        self.revolutions = [-1, -1]
+        self.circular_offset = [0, 0]
+        self.start_pos = [[0,0], [0,0]]
+        self.circling_ai_initial_setup = 1
+        self.circle_state = [0,0]
+
         self.random_path_choice1 = random.choice([1,2,3])
         self.random_path_choice2 = random.choice([1,2,3])
         self.random_path_choice3 = random.choice([1,2,3])
@@ -28,14 +39,13 @@ class SnakeAI:
         random.shuffle(self.random_indices_for_path) # for random paths in flanking ai
         self.random_indices_for_orientation = [0,1]
         random.shuffle(self.random_indices_for_orientation)
+
     def execute_ai(self, snakes, food): # executes ai and returns a list of directions
         directions = [] 
         for i in range(len(snakes)):
-            if i < 4:
-                directions.append(self.flanking_ai(snakes, food, i))
-            if i >= 4:
-                directions.append(self.line_up_ai(snakes, food, i, self.random_indices_for_orientation[i - 4])) 
-            print(snakes[i][0].x, snakes[i][0].y)               
+            directions.append(self.circling_ai(snakes, food, i, 1, self.circling_ai_initial_setup))  
+        if self.circling_ai_initial_setup == 1:
+            self.circling_ai_initial_setup = 0                      
         return directions 
             
     # the flanking ai goes to a "setup" position offset from the food before moving in to attack
@@ -119,7 +129,7 @@ class SnakeAI:
                    
         return direction_to_append
         
-    def shortest_path_ai(self, snakes, food, i, setup_position_x = -1, setup_position_y = -1): # ai for shortest path to food
+    def shortest_path_ai(self, snakes, food, i, setup_position_x = -1, setup_position_y = -1): # ai for shortest path to a point (x,y)
         # determine if we are moving towards food or setup position of coord are provided 
         if setup_position_x == -1 and setup_position_y == -1:
             x_diff = food.x - snakes[i][0].x
@@ -192,7 +202,6 @@ class SnakeAI:
                         direction_to_append = self.shortest_path_ai(snakes, food, i)    
                         print("forced to hunt")                                            
             else:
-                print("moving vertical")
                 if y_diff >= 0: # go down
                     if snakes[i][0].y + BLOCK_HEIGHT == snakes[i][1].y or snakes[i][0].y + BLOCK_HEIGHT == HEIGHT:
                         if snakes[i][0].x == WIDTH: # go left
@@ -288,8 +297,70 @@ class SnakeAI:
     def patrolling_ai(self): # ai patrols certain sections of the window for a period before moving to the next, if food comes close enough it will pursue
         pass
     
-    def circling_ai(self): # ai where snake will run circles around a certain radius in the map, no real intentions to kill the food. the snake must be long however! 
-        pass
+    def circling_ai(self, snakes, food, i, mode, setup_flag): # ai where snake will run circles around a certain radius in the map, no real intentions to kill the food. the snake must be long for outer edges, and shorter for circles towards the center! 
+        # this function will be called with a snake and its index if it is the longest or shortest snake, or both! 
+        # no need to worry about figuring out length here
+        # mode parameter decides if its an ai for short or long snake length, 0 = short snake, 1 = long snake
+        # supports up to two snakes 
+        # the radius of the circle will just be an offset from the width or height
+
+        if i == 0:
+            index = 0
+        elif i == 1:
+            index = 1
+
+        if setup_flag == 1 or self.revolutions[index] == 0: # get new offset and start position for snake
+            if mode == 0: # short snake
+                self.circular_offset[index] = random.choice(SHORT_OFFSET)      
+            elif mode == 1: # long snake
+                self.circular_offset[index] = random.choice(LONG_OFFSET)
+            print(snakes[i][0].x, snakes[i][0].y)
+            x_y_cord = []
+            # create x cord on offset closest to snake 
+            if abs(self.circular_offset[index] - snakes[i][0].x) < abs(WIDTH - self.circular_offset[index] - snakes[i][0].x):
+                x_y_cord.append(self.circular_offset[index])
+            else:
+                x_y_cord.append(WIDTH - self.circular_offset[index])
+            # create y cord on offset closest to snake 
+            if abs(self.circular_offset[index] - snakes[i][0].y) < abs(HEIGHT - self.circular_offset[index] - snakes[i][0].y):
+                x_y_cord.append(self.circular_offset[index])
+            else:
+                x_y_cord.append(WIDTH - self.circular_offset[index])
+            print(x_y_cord)
+            # the above will get us a corner closest to the snake on the offset square, now we need to figure out whether to slide the x or y value to get closer to the snake
+            if abs(x_y_cord[0] - snakes[i][0].x) < abs(x_y_cord[1] - snakes[i][0].y): # if x value closer slide x value to snake and keep y value
+                x_y_cord[0] = snakes[i][0].x
+                print("slid x val")
+            else: # if y value closer slide y value to snake and keep x value
+                x_y_cord[1] = snakes[i][0].y
+                print("slid y val")
+            
+            self.start_pos[index] = x_y_cord
+            print("starting pos:" , x_y_cord)
+            print("going to: ", self.circular_offset[index])
+
+        # go to starting position
+        if (snakes[i][0].x != self.start_pos[index][0] or snakes[i][0].y != self.start_pos[index][1]) and self.circle_state[index] == 0:
+            print(snakes[i][0].x, snakes[i][0].y)
+            direction_to_append = self.shortest_path_ai(snakes, food, i, self.start_pos[index][0], self.start_pos[index][1])
+        elif (snakes[i][0].x == self.start_pos[index][0] and snakes[i][0].y == self.start_pos[index][1]) and self.circle_state[index] == 0:
+            self.circle_state[index] = 1
+
+        if self.circle_state[index] == 1:
+            if snakes[i][0].x != self.circular_offset[index] and snakes[i][0].x != WIDTH - self.circular_offset[index]: # this means snake is right on vertical border of offset so must go up or down
+                print(snakes[i][0].x, snakes[i][0].y)
+                # this should bring it to a corner
+                if snakes[i][0].y != self.circular_offset[index]:
+                    direction_to_append = 0
+            
+            else: # else snake is right on horizontal border of offset so must go left or right
+                print("shouldnt b here")
+                if snakes[i][0].y != self.circular_offset[index]:
+                    direction_to_append = 0
+
+        return direction_to_append
+
+
     
     
     #7/22/21 1:30am - note: consider adding "coin" pickups on the window to increase score, gives player an incentive to move around to specific locatins and take risks

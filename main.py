@@ -370,7 +370,7 @@ def main():
     drop_power_up = random.randint(0, 1200) # 0 to 45 seconds, 750 is adjusted for the framerate (45*60 = 2700)
     number_of_power_ups_dropped = 0
 
-    number_of_snakes = 2
+    number_of_snakes = 1
     snake_length = 6
     snakes = create_snakes(number_of_snakes, snake_length)
     snakes_killed = 0
