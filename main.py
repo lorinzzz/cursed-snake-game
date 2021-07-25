@@ -360,7 +360,7 @@ def main():
 
     end_game = 0
 
-    snake_speed = 20 # lower is faster
+    snake_speed = 5 # lower is faster
 
     food_bullets = []
     activate_bullet = 0

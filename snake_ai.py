@@ -309,7 +309,9 @@ class SnakeAI:
         elif i == 1:
             index = 1
 
-        if setup_flag == 1 or self.revolutions[index] == 0: # get new offset and start position for snake
+        if setup_flag == 1 or self.revolutions[index] == 2: # get new offset and start position for snake
+            self.revolutions[index] = -1
+            self.circle_state[index] = 0            
             if mode == 0: # short snake
                 self.circular_offset[index] = random.choice(SHORT_OFFSET)      
             elif mode == 1: # long snake
@@ -329,35 +331,66 @@ class SnakeAI:
             print(x_y_cord)
             # the above will get us a corner closest to the snake on the offset square, now we need to figure out whether to slide the x or y value to get closer to the snake
             if abs(x_y_cord[0] - snakes[i][0].x) < abs(x_y_cord[1] - snakes[i][0].y): # if x value closer slide x value to snake and keep y value
-                x_y_cord[0] = snakes[i][0].x
+                if snakes[i][0].x >= self.circular_offset[index] and snakes[i][0].x <= WIDTH - self.circular_offset[index]: # only slide if snake is within offset lines
+                    x_y_cord[0] = snakes[i][0].x
+                # else it stays in corner 
                 print("slid x val")
             else: # if y value closer slide y value to snake and keep x value
-                x_y_cord[1] = snakes[i][0].y
+                if snakes[i][0].y >= self.circular_offset[index] and snakes[i][0].y <= WIDTH - self.circular_offset[index]: # only slide if snake is within offset lines
+                    x_y_cord[1] = snakes[i][0].y                
                 print("slid y val")
             
             self.start_pos[index] = x_y_cord
             print("starting pos:" , x_y_cord)
-            print("going to: ", self.circular_offset[index])
+            print("offset: ", self.circular_offset[index])
 
         # go to starting position
         if (snakes[i][0].x != self.start_pos[index][0] or snakes[i][0].y != self.start_pos[index][1]) and self.circle_state[index] == 0:
             print(snakes[i][0].x, snakes[i][0].y)
             direction_to_append = self.shortest_path_ai(snakes, food, i, self.start_pos[index][0], self.start_pos[index][1])
         elif (snakes[i][0].x == self.start_pos[index][0] and snakes[i][0].y == self.start_pos[index][1]) and self.circle_state[index] == 0:
+            print("in circle state")
             self.circle_state[index] = 1
 
-        if self.circle_state[index] == 1:
-            if snakes[i][0].x != self.circular_offset[index] and snakes[i][0].x != WIDTH - self.circular_offset[index]: # this means snake is right on vertical border of offset so must go up or down
-                print(snakes[i][0].x, snakes[i][0].y)
-                # this should bring it to a corner
-                if snakes[i][0].y != self.circular_offset[index]:
-                    direction_to_append = 0
-            
-            else: # else snake is right on horizontal border of offset so must go left or right
-                print("shouldnt b here")
-                if snakes[i][0].y != self.circular_offset[index]:
-                    direction_to_append = 0
+        direction = [0, 180, 90, 270]
+        corner_direction = [90, 180, 0, 270]
+        ccw = 0
+        if ccw == 1:
+            direction = [180, 0, 270, 90]
+            corner_direction = [180, 270, 90, 0]
 
+        # check if snakes is at corner before deciding whether to go up down left or right
+        # check if snake is not in corner and on vertical or horizontal offset border line
+        if self.circle_state[index] == 1:
+            print(snakes[i][0].x, snakes[i][0].y)
+            if snakes[i][0].x != self.circular_offset[index] and snakes[i][0].x != WIDTH - self.circular_offset[index]: # this means snake is right on horizontal border of offset so must go left or right 
+                # GOING CW for now
+                # check which horizontal border it is on before deciding left or right
+                if snakes[i][0].y == self.circular_offset[index]: # top border
+                    direction_to_append = direction[2]
+                elif snakes[i][0].y == HEIGHT - self.circular_offset[index]: # bottom border
+                    direction_to_append = direction[3]
+            elif snakes[i][0].y != self.circular_offset[index] and snakes[i][0].y != HEIGHT - self.circular_offset[index]: # else snake is right on vertical border of offset so must go up or down
+                if snakes[i][0].x == self.circular_offset[index]: # left border
+                    direction_to_append = direction[0]
+                elif snakes[i][0].x == WIDTH - self.circular_offset[index]: # right border
+                    direction_to_append = direction[1] 
+            else: # snake is at a corner
+                if snakes[i][0].y == self.circular_offset[index]: # snake is at top border
+                    if snakes[i][0].x == self.circular_offset[index]: # at top left corner
+                        direction_to_append = corner_direction[0]
+                    elif snakes[i][0].x == WIDTH - self.circular_offset[index]: # top right corner
+                        direction_to_append = corner_direction[1]
+                elif snakes[i][0].y == HEIGHT - self.circular_offset[index]:
+                    if snakes[i][0].x == self.circular_offset[index]: # at bottom left corner
+                        direction_to_append = corner_direction[2]
+                    elif snakes[i][0].x == WIDTH - self.circular_offset[index]: # bottom right corner                
+                        direction_to_append = corner_direction[3]
+
+            # when snake head returns to starting pos, increase revolutions 
+            if snakes[i][0].x == self.start_pos[index][0] and snakes[i][0].y == self.start_pos[index][1]:
+                self.revolutions[index] += 1
+                print(self.revolutions[index])
         return direction_to_append
 
 
