@@ -310,6 +310,24 @@ class SnakeAI:
         # max 3 snakes 
         index = i # placeholder
         # get a random point on map with the min offset of 180
+
+        if snakes[i][0].x == self.patrol_point[index][0] and snakes[i][0].y == self.patrol_point[index][1] and self.patrol_state[index] == 1:
+            self.patrol_point[index][0] = 30 * random.randint((self.patrol_center[index][0] - self.patrol_offset)/30, (self.patrol_center[index][0] + self.patrol_offset + 30)/30)
+            self.patrol_point[index][1] = 30 * random.randint((self.patrol_center[index][1] - self.patrol_offset)/30, (self.patrol_center[index][1] + self.patrol_offset + 30)/30)                
+            self.patrol_count[index] += 1
+            print("patrol count: ", self.patrol_count[index])
+            self.patrol_point[index][0] = 30 * random.randint((self.patrol_center[index][0] - self.patrol_offset)/30, (self.patrol_center[index][0] + self.patrol_offset)/30)
+            self.patrol_point[index][1] = 30 * random.randint((self.patrol_center[index][1] - self.patrol_offset)/30, (self.patrol_center[index][1] + self.patrol_offset)/30)
+            print("setting patrol point", self.patrol_point[index])            
+
+        if self.patrol_count[index] == 10:
+            self.patrol_state[index] = 0
+            self.patrol_center[index][0] = 0
+            self.patrol_center[index][1] = 0
+            self.patrol_count[index] = 0
+
+
+
         if self.patrol_center[index][0] == 0 and self.patrol_center[index][1] == 0:
             self.patrol_center[index][0] = 30 * random.randint(6, 24)
             self.patrol_center[index][1] = 30 * random.randint(6, 24)
@@ -321,33 +339,18 @@ class SnakeAI:
             print(self.patrol_center[index], max_offset, self.patrol_offset)
             print(snakes[i][0].x, snakes[i][0].y)
         # go to patrol center
-        if snakes[i][0].x != self.patrol_center[index][0] or snakes[i][0].y != self.patrol_center[index][1] and self.patrol_state[index] == 0:
+        if (snakes[i][0].x != self.patrol_center[index][0] or snakes[i][0].y != self.patrol_center[index][1]) and self.patrol_state[index] == 0:
             print("going to center")
             direction_to_append = self.shortest_path_ai(snakes, food, i, self.patrol_center[index][0], self.patrol_center[index][1])
         elif snakes[i][0].x == self.patrol_center[index][0] and snakes[i][0].y == self.patrol_center[index][1] and self.patrol_state[index] == 0:
             self.patrol_state[index] = 1
-            self.patrol_point[index][0] = 30 * random.randint((self.patrol_center[index][0] - self.patrol_offset)/30, (self.patrol_center[index][0] + self.patrol_offset + 30)/30)
-            self.patrol_point[index][1] = 30 * random.randint((self.patrol_center[index][1] - self.patrol_offset)/30, (self.patrol_center[index][1] + self.patrol_offset + 30)/30)
+            self.patrol_point[index][0] = 30 * random.randint((self.patrol_center[index][0] - self.patrol_offset)/30, (self.patrol_center[index][0] + self.patrol_offset)/30)
+            self.patrol_point[index][1] = 30 * random.randint((self.patrol_center[index][1] - self.patrol_offset)/30, (self.patrol_center[index][1] + self.patrol_offset)/30)
             print("setting patrol point", self.patrol_point[index])
 
         if self.patrol_state[index] == 1:
-            print('patrollling!')
-            if snakes[i][0].x == self.patrol_point[index][0] and snakes[i][0].y == self.patrol_point[index][1]:
-                self.patrol_point[index][0] = 30 * random.randint((self.patrol_center[index][0] - self.patrol_offset)/30, (self.patrol_center[index][0] + self.patrol_offset + 30)/30)
-                self.patrol_point[index][1] = 30 * random.randint((self.patrol_center[index][1] - self.patrol_offset)/30, (self.patrol_center[index][1] + self.patrol_offset + 30)/30)                
-                self.patrol_count[index] += 1
-                print("patrol count: ", self.patrol_count[index])
+            direction_to_append = self.shortest_path_ai(snakes, food, i, self.patrol_point[index][0], self.patrol_point[index][1])
 
-
-            else:
-                direction_to_append = self.shortest_path_ai(snakes, food, i, self.patrol_point[index][0], self.patrol_point[index][1])
-
-
-        if self.patrol_count[index] == 10:
-            self.patrol_state[index] = 0
-            self.patrol_center[index][0] = 0
-            self.patrol_center[index][1] = 0
-            self.patrol_count[index] = 0
 
         return direction_to_append
 
