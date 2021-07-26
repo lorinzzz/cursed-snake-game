@@ -8,7 +8,7 @@ WIDTH, HEIGHT = pygame_constants.WIDTH, pygame_constants.HEIGHT
 BLOCK_WIDTH, BLOCK_HEIGHT = pygame_constants.BLOCK_WIDTH, pygame_constants.BLOCK_HEIGHT
 LONG_OFFSET = [30, 60, 90, 120, 150, 180, 210]
 SHORT_OFFSET = [240, 270, 300, 330, 360, 390]
-
+PATROL_OFFSET = [90, 120, 150, 180, 210]
 
 class SnakeAI:
     def __init__(self):
@@ -25,6 +25,7 @@ class SnakeAI:
         self.s4_move = 0
         self.offset = 5
 
+        # for circling ai
         self.revolutions = [-1, -1]
         self.circular_offset = [0, 0]
         self.start_pos = [[0,0], [0,0]]
@@ -32,6 +33,14 @@ class SnakeAI:
         self.circle_state = [0,0]
         self.moves = [0,0]
         self.total_revolutions = [0, 0]
+        self.ccw = [0,0]
+
+        # for patrolling ai
+        self.patrol_center = [ [0,0], [0,0], [0,0] ]
+        self.patrol_offset = [0, 0, 0]
+        self.patrol_point = [[0,0], [0,0], [0,0]]
+        self.patrol_state = [0,0,0]
+        self.patrol_count = [0,0,0,]
 
         self.random_path_choice1 = random.choice([1,2,3])
         self.random_path_choice2 = random.choice([1,2,3])
@@ -45,9 +54,10 @@ class SnakeAI:
     def execute_ai(self, snakes, food): # executes ai and returns a list of directions
         directions = [] 
         for i in range(len(snakes)):
-            directions.append(self.circling_ai(snakes, food, i, 1, self.circling_ai_initial_setup))  
-        if self.circling_ai_initial_setup == 1:
-            self.circling_ai_initial_setup = 0                      
+        #     directions.append(self.circling_ai(snakes, food, i, 1, self.circling_ai_initial_setup))  
+        # if self.circling_ai_initial_setup == 1:
+        #     self.circling_ai_initial_setup = 0    
+            directions.append(self.patrolling_ai(snakes, food, i))                  
         return directions 
             
     # the flanking ai goes to a "setup" position offset from the food before moving in to attack
@@ -296,9 +306,54 @@ class SnakeAI:
                         print("forced to hunt")                                                    
                 
         return direction_to_append
-    def patrolling_ai(self): # ai patrols certain sections of the window for a period before moving to the next, if food comes close enough it will pursue
-        pass
-    
+    def patrolling_ai(self, snakes, food, i): # ai patrols certain sections of the window for a period before moving to the next, if food comes close enough it will pursue
+        # max 3 snakes 
+        index = i # placeholder
+        # get a random point on map with the min offset of 180
+        if self.patrol_center[index][0] == 0 and self.patrol_center[index][1] == 0:
+            self.patrol_center[index][0] = 30 * random.randint(6, 24)
+            self.patrol_center[index][1] = 30 * random.randint(6, 24)
+
+            max_offset = min(self.patrol_center[index][0], abs(WIDTH - self.patrol_center[index][0]), self.patrol_center[index][1], abs(HEIGHT - self.patrol_center[index][0]))
+        
+            self.patrol_offset = 30 * random.randint(6, max_offset/30)
+
+            print(self.patrol_center[index], max_offset, self.patrol_offset)
+            print(snakes[i][0].x, snakes[i][0].y)
+        # go to patrol center
+        if snakes[i][0].x != self.patrol_center[index][0] or snakes[i][0].y != self.patrol_center[index][1] and self.patrol_state[index] == 0:
+            print("going to center")
+            direction_to_append = self.shortest_path_ai(snakes, food, i, self.patrol_center[index][0], self.patrol_center[index][1])
+        elif snakes[i][0].x == self.patrol_center[index][0] and snakes[i][0].y == self.patrol_center[index][1] and self.patrol_state[index] == 0:
+            self.patrol_state[index] = 1
+            self.patrol_point[index][0] = 30 * random.randint((self.patrol_center[index][0] - self.patrol_offset)/30, (self.patrol_center[index][0] + self.patrol_offset + 30)/30)
+            self.patrol_point[index][1] = 30 * random.randint((self.patrol_center[index][1] - self.patrol_offset)/30, (self.patrol_center[index][1] + self.patrol_offset + 30)/30)
+            print("setting patrol point", self.patrol_point[index])
+
+        if self.patrol_state[index] == 1:
+            print('patrollling!')
+            if snakes[i][0].x == self.patrol_point[index][0] and snakes[i][0].y == self.patrol_point[index][1]:
+                self.patrol_point[index][0] = 30 * random.randint((self.patrol_center[index][0] - self.patrol_offset)/30, (self.patrol_center[index][0] + self.patrol_offset + 30)/30)
+                self.patrol_point[index][1] = 30 * random.randint((self.patrol_center[index][1] - self.patrol_offset)/30, (self.patrol_center[index][1] + self.patrol_offset + 30)/30)                
+                self.patrol_count[index] += 1
+                print("patrol count: ", self.patrol_count[index])
+
+
+            else:
+                direction_to_append = self.shortest_path_ai(snakes, food, i, self.patrol_point[index][0], self.patrol_point[index][1])
+
+
+        if self.patrol_count[index] == 10:
+            self.patrol_state[index] = 0
+            self.patrol_center[index][0] = 0
+            self.patrol_center[index][1] = 0
+            self.patrol_count[index] = 0
+
+        return direction_to_append
+
+
+
+        
     def circling_ai(self, snakes, food, i, mode, setup_flag): # ai where snake will run circles around a certain radius in the map, no real intentions to kill the food. the snake must be long for outer edges, and shorter for circles towards the center! 
         # this function will be called with a snake and its index if it is the longest or shortest snake, or both! 
         # no need to worry about figuring out length here
@@ -312,7 +367,8 @@ class SnakeAI:
 
         if setup_flag == 1 or self.revolutions[index] == self.total_revolutions[index]: # get new offset and start position for snake
             self.revolutions[index] = -1
-            self.circle_state[index] = 0           
+            self.circle_state[index] = 0   
+            self.ccw[index] = random.choice([0,1])        
             if mode == 0: # short snake
                 self.circular_offset[index] = random.choice(SHORT_OFFSET)
                 self.total_revolutions[index] =  random.randint(7, 15)    # 7-15 laps for short snake 
@@ -375,8 +431,7 @@ class SnakeAI:
         # check if snake is not in corner and on vertical or horizontal offset border line
         if self.circle_state[index] == 1:
 
-            ccw = 0
-            if ccw == 1:
+            if self.ccw[index] == 1:
                 direction = [180, 0, 270, 90]
                 corner_direction = [180, 270, 90, 0]
             else:
