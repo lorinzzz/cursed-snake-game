@@ -30,6 +30,8 @@ class SnakeAI:
         self.start_pos = [[0,0], [0,0]]
         self.circling_ai_initial_setup = 1
         self.circle_state = [0,0]
+        self.moves = [0,0]
+        self.total_revolutions = [0, 0]
 
         self.random_path_choice1 = random.choice([1,2,3])
         self.random_path_choice2 = random.choice([1,2,3])
@@ -303,19 +305,21 @@ class SnakeAI:
         # mode parameter decides if its an ai for short or long snake length, 0 = short snake, 1 = long snake
         # supports up to two snakes 
         # the radius of the circle will just be an offset from the width or height
-
         if i == 0:
             index = 0
         elif i == 1:
             index = 1
 
-        if setup_flag == 1 or self.revolutions[index] == 2: # get new offset and start position for snake
+        if setup_flag == 1 or self.revolutions[index] == self.total_revolutions[index]: # get new offset and start position for snake
             self.revolutions[index] = -1
-            self.circle_state[index] = 0            
+            self.circle_state[index] = 0           
             if mode == 0: # short snake
-                self.circular_offset[index] = random.choice(SHORT_OFFSET)      
+                self.circular_offset[index] = random.choice(SHORT_OFFSET)
+                self.total_revolutions[index] =  random.randint(7, 15)    # 7-15 laps for short snake 
             elif mode == 1: # long snake
                 self.circular_offset[index] = random.choice(LONG_OFFSET)
+                self.total_revolutions[index] =  random.randint(2, 7)    # 2-6 laps for long snake 
+            print(self.total_revolutions[index], " revolutions")
             print(snakes[i][0].x, snakes[i][0].y)
             x_y_cord = []
             # create x cord on offset closest to snake 
@@ -352,16 +356,33 @@ class SnakeAI:
             print("in circle state")
             self.circle_state[index] = 1
 
-        direction = [0, 180, 90, 270]
-        corner_direction = [90, 180, 0, 270]
-        ccw = 0
-        if ccw == 1:
-            direction = [180, 0, 270, 90]
-            corner_direction = [180, 270, 90, 0]
+        # check if snake head in proximity with food, (within 4 blocks away)
+        if food.x >= snakes[i][0].x - 120 and food.x <= snakes[i][0].x + 150 and food.y >= snakes[i][0].y - 120 and food.y <= snakes[i][0].y + 150:
+            self.circle_state[index] = 3 # kill mode
+            print("circling snake in kill mode!")
+        
+        if self.circle_state[index] == 3: # kill food
+            direction_to_append = self.shortest_path_ai(snakes, food, i)
+            self.moves[index] += 1
+        
+        if self.moves[index] == 25:
+            self.moves[index] = 0
+            self.circle_state[index] = 0
+            self.revolutions[index] == self.total_revolutions[index]
+        
 
         # check if snakes is at corner before deciding whether to go up down left or right
         # check if snake is not in corner and on vertical or horizontal offset border line
         if self.circle_state[index] == 1:
+
+            ccw = 0
+            if ccw == 1:
+                direction = [180, 0, 270, 90]
+                corner_direction = [180, 270, 90, 0]
+            else:
+                direction = [0, 180, 90, 270]
+                corner_direction = [90, 180, 0, 270]
+
             print(snakes[i][0].x, snakes[i][0].y)
             if snakes[i][0].x != self.circular_offset[index] and snakes[i][0].x != WIDTH - self.circular_offset[index]: # this means snake is right on horizontal border of offset so must go left or right 
                 # GOING CW for now
@@ -393,7 +414,4 @@ class SnakeAI:
                 print(self.revolutions[index])
         return direction_to_append
 
-
-    
-    
     #7/22/21 1:30am - note: consider adding "coin" pickups on the window to increase score, gives player an incentive to move around to specific locatins and take risks
