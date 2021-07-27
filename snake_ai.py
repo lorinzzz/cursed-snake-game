@@ -54,112 +54,36 @@ class SnakeAI:
         self.random_indices_for_orientation = [0,1]
         random.shuffle(self.random_indices_for_orientation)
 
-        self.snake_tracker = []
+        
+        # 0 = flanking, 1 = shortest path, 2 = line up, 3 = patrolling, 4 = circling
+        self.ai_type = [] 
+
         self.ai_initial_setup = 1
-        self.original_snake_count = 0
-        self.flanking_ai_indices = []
-        self.line_up_ai_indices = []
-        self.shortest_path_ai_indices = []
-        self.patrolling_ai_indices = []
-        self.circling_ai_indices = []
-    def execute_ai(self, snakes, food): # executes ai and returns a list of directions
+
+    def execute_ai(self, snakes, food, ignore_list): # executes ai and returns a list of directions
         directions = [] 
-        snake_count = len(snakes)
 
-        # set up snake tracker and get original snake count
-        if self.ai_initial_setup == 1:
-            self.original_snake_count = snake_count
-            for x in range(snake_count):
-                self.snake_tracker.append(x)
-            
-            # configure which snake gets which ai
-            # for 4 snakes:
-            if snake_count == 4:
-                for i in range(snake_count):
-                    if i == 0:
-                        self.shortest_path_ai_indices.append(i)
-                    if i == 1:
-                        self.line_up_ai_indices.append(i)
-                    if i == 2:
-                        self.circling_ai_indices.append(i)
-                    if i == 3: 
-                        self.flanking_ai_indices.append(i)
-            # for 5 snakes:
-            if snake_count == 5:
-                for i in range(snake_count):
-                    if i == 0:
-                        self.shortest_path_ai_indices.append(i)
-                    if i == 1:
-                        self.line_up_ai_indices.append(i)
-                    if i == 2:
-                        self.circling_ai_indices.append(i)
-                    if i == 3: 
-                        self.flanking_ai_indices.append(i)      
-                    if i == 3: 
-                        self.patrolling_ai_indices.append(i)                                      
-            # for 6 snakes
-            if snake_count == 6:
-                for i in range(snake_count):
-                    if i == 0:
-                        self.shortest_path_ai_indices.append(i)
-                    if i == 1:
-                        self.line_up_ai_indices.append(i)
-                    if i == 2:
-                        self.line_up_ai_indices.append(i)
-                    if i == 3:
-                        self.circling_ai_indices.append(i)
-                    if i == 4: 
-                        self.flanking_ai_indices.append(i)      
-                    if i == 5:
-                        self.patrolling_ai_indices.append(i)                  
-            # for 7 snakes
-            if snake_count == 7:
-                for i in range(snake_count):
-                    if i == 0:
-                        self.shortest_path_ai_indices.append(i)
-                    if i == 1:
-                        self.line_up_ai_indices.append(i)
-                    if i == 2:
-                        self.line_up_ai_indices.append(i)
-                    if i == 3:
-                        self.circling_ai_indices.append(i)
-                    if i == 4: 
-                        self.flanking_ai_indices.append(i)      
-                    if i == 5:
-                        self.patrolling_ai_indices.append(i) 
-                    if i == 6:
-                        self.patrolling_ai_indices.append(i)                 
-            # for 8 snakes
-            if snake_count == 8:
-                for i in range(snake_count):
-                    if i == 0:
-                        self.shortest_path_ai_indices.append(i)
-                    if i == 1:
-                        self.line_up_ai_indices.append(i)
-                    if i == 2:
-                        self.line_up_ai_indices.append(i)
-                    if i == 3:
-                        self.circling_ai_indices.append(i)
-                    if i == 4: 
-                        self.flanking_ai_indices.append(i)      
-                    if i == 5:
-                        self.patrolling_ai_indices.append(i) 
-                    if i == 6:
-                        self.patrolling_ai_indices.append(i)     
-                    if i == 7: 
-                        self.flanking_ai_indices.append(i) 
-
-        for i in range(snakes):
-        #     directions.append(self.circling_ai(snakes, food, i, 1, self.circling_ai_initial_setup))  
-  
-            directions.append(self.patrolling_ai(snakes, food, i))   
+        for i in range(len(snakes)):
+            if i not in ignore_list:
+                if i == 0 or i == 1:
+                    directions.append(self.flanking_ai(snakes, food, i))
+                if i == 2:
+                    directions.append(self.shortest_path_ai(snakes, food, i))
+                if i == 3:
+                    directions.append(self.line_up_ai(snakes, food, i, 1))
+                if i == 4 or i == 5:
+                    directions.append(self.patrolling_ai(snakes, food, i))
+                if i == 6 or i == 7:
+                    directions.append(self.circling_ai(snakes, food, i, 1, self.ai_initial_setup))
+            else:
+                directions.append(-1)
 
         if self.ai_initial_setup == 1:
-            self.ai_initial_setup = 0                             
+            self.ai_initial_setup = 0    
+             
         return directions 
 
-    def update_snake_tracker(self, del_idx):
-        del self.snake_tracker[self.snake_tracker.index(del_idx)]
+
 
     # the flanking ai goes to a "setup" position offset from the food before moving in to attack
     # it uses the shortest and line up path choices, hence we can just call those functions to use those pathfinding functions       
@@ -413,17 +337,22 @@ class SnakeAI:
         # state 2 = kill mode: food came in proximity of snake head, so snake has 25 moves to pursue the food
 
         # max 3 snakes 
-        index = i # placeholder
-        # get a random point on map with the min offset of 180
+        if i == 4: # placeholder
+            index = 0
+        if i == 5:
+            index = 1
+        if i == 6:
+            index = 2
 
 
-        if i == self.random_indices_for_patrol[0]:
+        if index == self.random_indices_for_patrol[0]:
             path_choice = self.random_path_choice1
-        if i == self.random_indices_for_patrol[1]: 
+        if index == self.random_indices_for_patrol[1]: 
             path_choice = self.random_path_choice2
-        if i == self.random_indices_for_patrol[2]:
+        if index == self.random_indices_for_patrol[2]:
             path_choice = self.random_path_choice3
 
+        # get a random point on map with the min offset of 180
         if snakes[i][0].x == self.patrol_point[index][0] and snakes[i][0].y == self.patrol_point[index][1] and self.patrol_state[index] == 1:
             self.patrol_point[index][0] = 30 * random.randint((self.patrol_center[index][0] - self.patrol_offset)/30, (self.patrol_center[index][0] + self.patrol_offset + 30)/30)
             self.patrol_point[index][1] = 30 * random.randint((self.patrol_center[index][1] - self.patrol_offset)/30, (self.patrol_center[index][1] + self.patrol_offset + 30)/30)                
@@ -491,9 +420,9 @@ class SnakeAI:
         # mode parameter decides if its an ai for short or long snake length, 0 = short snake, 1 = long snake
         # supports up to two snakes 
         # the radius of the circle will just be an offset from the width or height
-        if i == 0:
+        if i == 6:
             index = 0
-        elif i == 1:
+        elif i == 7:
             index = 1
 
         if setup_flag == 1 or self.revolutions[index] == self.total_revolutions[index]: # get new offset and start position for snake

@@ -22,6 +22,7 @@ from pygame.event import get
 from snake_ai import SnakeAI
 
 WIDTH, HEIGHT = pygame_constants.WIDTH, pygame_constants.HEIGHT
+ACTUAL_WINDOW_WIDTH = WIDTH + 250
 BLOCK_WIDTH, BLOCK_HEIGHT = pygame_constants.BLOCK_WIDTH, pygame_constants.BLOCK_HEIGHT
 FPS = pygame_constants.FPS
 VEL = 2
@@ -36,7 +37,7 @@ SPAWN_POWER_UP_INTERVAL = 1800 # 2700/60 = 45 1800/60 = 30 seconds
 POWER_UP_TIME = 10000 # powers ups are only active for 10 seconds 
 MAX_SNAKES = 8
 
-WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+WIN = pygame.display.set_mode((ACTUAL_WINDOW_WIDTH, HEIGHT))
 pygame.display.set_caption("Cursed Snake Game")
 
 FOOD_DEATH_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'food_death.mp3'))
@@ -74,6 +75,8 @@ DROP_POISON_PWR_UP = pygame.transform.scale(DROP_POISON_PWR_UP_IMG, (BLOCK_WIDTH
 POISON_PWR_UP_IMG = pygame.image.load(os.path.join('Assets', 'poison_power_up.png'))
 POISON_PWR_UP = pygame.transform.scale(POISON_PWR_UP_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT))
 
+BORDER = pygame.Rect(WIDTH, 0, 2, HEIGHT)
+
 # function to spawn snake head with appropriate image orientation based on movement direction
 def spawn_snake_head(direction):
     #pygame has these flipped
@@ -86,15 +89,16 @@ def spawn_snake_head(direction):
 
 def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_stamina, snakes, direction, time, snakes_killed):
     WIN.fill(BLACK)
+    pygame.draw.rect(WIN, WHITE, BORDER)
     sprint_bar = pygame.font.SysFont('comicsans', 30).render("Sprint: " + str(sprint_stamina), 1, WHITE)
     sprint_bar.set_alpha(150)
-    WIN.blit(sprint_bar, (10, 10))
+    WIN.blit(sprint_bar, (ACTUAL_WINDOW_WIDTH - sprint_bar.get_width(), 70))
     time_disp = pygame.font.SysFont('comicsans', 30).render("Time: " + str(time), 1, WHITE)
     time_disp.set_alpha(150)
-    WIN.blit(time_disp, (WIDTH - time_disp.get_width() - 10, 10))
+    WIN.blit(time_disp, (ACTUAL_WINDOW_WIDTH - time_disp.get_width() - 10, 10))
     snakes_killed_disp = pygame.font.SysFont('comicsans', 30).render("Snakes Killed: " + str(snakes_killed), 1, WHITE)
     snakes_killed_disp.set_alpha(150)
-    WIN.blit(snakes_killed_disp, (WIDTH - snakes_killed_disp.get_width() - 10, 40))
+    WIN.blit(snakes_killed_disp, (ACTUAL_WINDOW_WIDTH - snakes_killed_disp.get_width() - 10, 40))
     if poison == 1:
         WIN.blit(POISON_FOOD, (food.x, food.y))
     elif poison == 0:
@@ -111,11 +115,11 @@ def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_st
 
     #display snake body
     for x in range(len(snakes)):
-        for i in range(1, len(snakes[x])):
-            WIN.blit(SNAKE_BODY, (snakes[x][i].x, snakes[x][i].y))
-    # draw head over body     
-    for x in range(len(snakes)):
-        WIN.blit(spawn_snake_head(direction[0]), (snakes[x][0].x, snakes[x][0].y))
+        for i in range(len(snakes[x])):
+            if i == 0:
+                WIN.blit(spawn_snake_head(direction[i]), (snakes[x][i].x, snakes[x][i].y))
+            if i > 0:
+                WIN.blit(SNAKE_BODY, (snakes[x][i].x, snakes[x][i].y))
     # display projectiles from using the shoot power up
     for bullet in food_bullets:
         pygame.draw.rect(WIN, (255,0,0), bullet)
@@ -161,19 +165,20 @@ def food_movement(keys_pressed, food, sprint_stamina):
 #def snake_ai(snakes, food):
 #    return ai.execute_ai(snakes,food)
  
-def snake_movement(snakes, direction):
+def snake_movement(snakes, direction, ignore_list):
     for x in range(len(snakes)):
-        for i in range(len(snakes[x]) - 1, 0, -1):
-            snakes[x][i].x = snakes[x][i-1].x
-            snakes[x][i].y = snakes[x][i-1].y       
-        if direction[x] == 0:
-            snakes[x][0].y -= BLOCK_WIDTH
-        elif direction[x] == 180:
-            snakes[x][0].y += BLOCK_WIDTH    
-        elif direction[x] == 270:
-            snakes[x][0].x -= BLOCK_WIDTH
-        elif direction[x] == 90:
-            snakes[x][0].x += BLOCK_WIDTH
+        if x not in ignore_list:
+            for i in range(len(snakes[x]) - 1, 0, -1):
+                snakes[x][i].x = snakes[x][i-1].x
+                snakes[x][i].y = snakes[x][i-1].y       
+            if direction[x] == 0:
+                snakes[x][0].y -= BLOCK_WIDTH
+            elif direction[x] == 180:
+                snakes[x][0].y += BLOCK_WIDTH    
+            elif direction[x] == 270:
+                snakes[x][0].x -= BLOCK_WIDTH
+            elif direction[x] == 90:
+                snakes[x][0].x += BLOCK_WIDTH
 
 # handles collision of food, snake, and poison objects in window
 # returns 1 if snake head collided with poison food or flying food, else 0 
@@ -222,12 +227,19 @@ def handle_food_snake_collision(food, snakes, poison, food_bullets):
                             food.y += 3
                     # collided diagnaolly??
     if del_flag == 1:
-        del snakes[del_idx]
         SNAKE_DEATH_SOUND.play()
         return del_idx
     else: 
-        return -2
-            
+        return -1
+
+def update_ignore_list(del_idx, ignore_list):
+    ignore_list.append(del_idx)
+
+def to_graveyard(snakes, del_idx):
+    for i in range(len(snakes[del_idx])):
+        snakes[del_idx][i].x = WIDTH + 100
+        snakes[del_idx][i].y = i*30
+
 # max of 8 snakes, maybe?
 def create_snakes(number_of_snakes, snake_length):
     snakes = []
@@ -359,7 +371,7 @@ def main():
 
     end_game = 0
 
-    snake_speed = 20 # lower is faster
+    snake_speed = 30 # lower is faster
 
     food_bullets = []
     activate_bullet = 0
@@ -369,10 +381,12 @@ def main():
     drop_power_up = random.randint(0, 1200) # 0 to 45 seconds, 750 is adjusted for the framerate (45*60 = 2700)
     number_of_power_ups_dropped = 0
 
-    number_of_snakes = 2
+    number_of_snakes = 8
     snake_length = 6
     snakes = create_snakes(number_of_snakes, snake_length)
     snakes_killed = 0
+
+    ignore_list = []
 
     run = True
     while run:
@@ -438,17 +452,17 @@ def main():
         power_up_status[1] = handle_food_power_up_collision(food, power_up, power_up_status)
 
         if time_control % snake_speed == 0: # controls how fast the snake can move
-            direction = snake_ai.execute_ai(snakes,food) # returns a list of directions for snakes
-            snake_movement(snakes, direction)
+            direction = snake_ai.execute_ai(snakes,food, ignore_list) # returns a list of directions for snakes
+            snake_movement(snakes, direction, ignore_list)
 
         if time_control % 60 == 0: # add score every second
             time += 1
 
         del_idx = handle_food_snake_collision(food, snakes, poison, food_bullets)
-        if del_idx != -2: # something was deleted
+        if del_idx != -1:
             snakes_killed += 1
-            snake_ai.update_snake_tracker(del_idx)
-            
+            update_ignore_list(del_idx, ignore_list)
+            to_graveyard(snakes, del_idx)
         if snakes_killed == number_of_snakes:
             end_game = 2
 
