@@ -29,7 +29,6 @@ class SnakeAI:
         self.revolutions = [-1, -1]
         self.circular_offset = [0, 0]
         self.start_pos = [[0,0], [0,0]]
-        self.circling_ai_initial_setup = 1
         self.circle_state = [0,0]
         self.moves = [0,0]
         self.total_revolutions = [0, 0]
@@ -55,15 +54,113 @@ class SnakeAI:
         self.random_indices_for_orientation = [0,1]
         random.shuffle(self.random_indices_for_orientation)
 
+        self.snake_tracker = []
+        self.ai_initial_setup = 1
+        self.original_snake_count = 0
+        self.flanking_ai_indices = []
+        self.line_up_ai_indices = []
+        self.shortest_path_ai_indices = []
+        self.patrolling_ai_indices = []
+        self.circling_ai_indices = []
     def execute_ai(self, snakes, food): # executes ai and returns a list of directions
         directions = [] 
-        for i in range(len(snakes)):
-        #     directions.append(self.circling_ai(snakes, food, i, 1, self.circling_ai_initial_setup))  
-        # if self.circling_ai_initial_setup == 1:
-        #     self.circling_ai_initial_setup = 0    
-            directions.append(self.patrolling_ai(snakes, food, i))                  
-        return directions 
+        snake_count = len(snakes)
+
+        # set up snake tracker and get original snake count
+        if self.ai_initial_setup == 1:
+            self.original_snake_count = snake_count
+            for x in range(snake_count):
+                self.snake_tracker.append(x)
             
+            # configure which snake gets which ai
+            # for 4 snakes:
+            if snake_count == 4:
+                for i in range(snake_count):
+                    if i == 0:
+                        self.shortest_path_ai_indices.append(i)
+                    if i == 1:
+                        self.line_up_ai_indices.append(i)
+                    if i == 2:
+                        self.circling_ai_indices.append(i)
+                    if i == 3: 
+                        self.flanking_ai_indices.append(i)
+            # for 5 snakes:
+            if snake_count == 5:
+                for i in range(snake_count):
+                    if i == 0:
+                        self.shortest_path_ai_indices.append(i)
+                    if i == 1:
+                        self.line_up_ai_indices.append(i)
+                    if i == 2:
+                        self.circling_ai_indices.append(i)
+                    if i == 3: 
+                        self.flanking_ai_indices.append(i)      
+                    if i == 3: 
+                        self.patrolling_ai_indices.append(i)                                      
+            # for 6 snakes
+            if snake_count == 6:
+                for i in range(snake_count):
+                    if i == 0:
+                        self.shortest_path_ai_indices.append(i)
+                    if i == 1:
+                        self.line_up_ai_indices.append(i)
+                    if i == 2:
+                        self.line_up_ai_indices.append(i)
+                    if i == 3:
+                        self.circling_ai_indices.append(i)
+                    if i == 4: 
+                        self.flanking_ai_indices.append(i)      
+                    if i == 5:
+                        self.patrolling_ai_indices.append(i)                  
+            # for 7 snakes
+            if snake_count == 7:
+                for i in range(snake_count):
+                    if i == 0:
+                        self.shortest_path_ai_indices.append(i)
+                    if i == 1:
+                        self.line_up_ai_indices.append(i)
+                    if i == 2:
+                        self.line_up_ai_indices.append(i)
+                    if i == 3:
+                        self.circling_ai_indices.append(i)
+                    if i == 4: 
+                        self.flanking_ai_indices.append(i)      
+                    if i == 5:
+                        self.patrolling_ai_indices.append(i) 
+                    if i == 6:
+                        self.patrolling_ai_indices.append(i)                 
+            # for 8 snakes
+            if snake_count == 8:
+                for i in range(snake_count):
+                    if i == 0:
+                        self.shortest_path_ai_indices.append(i)
+                    if i == 1:
+                        self.line_up_ai_indices.append(i)
+                    if i == 2:
+                        self.line_up_ai_indices.append(i)
+                    if i == 3:
+                        self.circling_ai_indices.append(i)
+                    if i == 4: 
+                        self.flanking_ai_indices.append(i)      
+                    if i == 5:
+                        self.patrolling_ai_indices.append(i) 
+                    if i == 6:
+                        self.patrolling_ai_indices.append(i)     
+                    if i == 7: 
+                        self.flanking_ai_indices.append(i) 
+
+        for i in range(snakes):
+        #     directions.append(self.circling_ai(snakes, food, i, 1, self.circling_ai_initial_setup))  
+  
+            directions.append(self.patrolling_ai(snakes, food, i))   
+
+        if self.ai_initial_setup == 1:
+            self.ai_initial_setup = 0                             
+        return directions 
+
+    def update_snake_tracker(self, del_idx):
+        del self.snake_tracker[self.snake_tracker.index(del_idx)]
+
     # the flanking ai goes to a "setup" position offset from the food before moving in to attack
     # it uses the shortest and line up path choices, hence we can just call those functions to use those pathfinding functions       
     def flanking_ai(self, snakes, food, i): # covers up to 4 snakes
@@ -387,10 +484,7 @@ class SnakeAI:
             self.patrol_moves[index] = 0
             self.patrol_state[index] = 0
         return direction_to_append
-
-
-
-        
+  
     def circling_ai(self, snakes, food, i, mode, setup_flag): # ai where snake will run circles around a certain radius in the map, no real intentions to kill the food. the snake must be long for outer edges, and shorter for circles towards the center! 
         # this function will be called with a snake and its index if it is the longest or shortest snake, or both! 
         # no need to worry about figuring out length here

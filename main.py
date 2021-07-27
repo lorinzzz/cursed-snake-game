@@ -224,9 +224,9 @@ def handle_food_snake_collision(food, snakes, poison, food_bullets):
     if del_flag == 1:
         del snakes[del_idx]
         SNAKE_DEATH_SOUND.play()
-        return 1
+        return del_idx
     else: 
-        return 0
+        return -2
             
 # max of 8 snakes, maybe?
 def create_snakes(number_of_snakes, snake_length):
@@ -444,7 +444,11 @@ def main():
         if time_control % 60 == 0: # add score every second
             time += 1
 
-        snakes_killed += handle_food_snake_collision(food, snakes, poison, food_bullets)
+        del_idx = handle_food_snake_collision(food, snakes, poison, food_bullets)
+        if del_idx != -2: # something was deleted
+            snakes_killed += 1
+            snake_ai.update_snake_tracker(del_idx)
+            
         if snakes_killed == number_of_snakes:
             end_game = 2
 
