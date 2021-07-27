@@ -109,14 +109,13 @@ def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_st
         elif power_up_status[0] == 3:
             WIN.blit(POISON_PWR_UP, (power_up.x, power_up.y))
 
-    #display snake
+    #display snake body
     for x in range(len(snakes)):
-        for i in range(len(snakes[x])):
-            if i == 0:
-                WIN.blit(spawn_snake_head(direction[i]), (snakes[x][i].x, snakes[x][i].y))
-            if i > 0:
-                WIN.blit(SNAKE_BODY, (snakes[x][i].x, snakes[x][i].y))
-
+        for i in range(1, len(snakes[x])):
+            WIN.blit(SNAKE_BODY, (snakes[x][i].x, snakes[x][i].y))
+    # draw head over body     
+    for x in range(len(snakes)):
+        WIN.blit(spawn_snake_head(direction[0]), (snakes[x][0].x, snakes[x][0].y))
     # display projectiles from using the shoot power up
     for bullet in food_bullets:
         pygame.draw.rect(WIN, (255,0,0), bullet)
