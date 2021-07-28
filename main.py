@@ -132,13 +132,13 @@ def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_st
     WIN.fill(BLACK)
     pygame.draw.rect(WIN, WHITE, BORDER)
     pygame.draw.rect(WIN, WHITE, SNAKE_GRAVE_BORDER)
-    sprint = pygame.font.SysFont('comicsans', 35).render("Sprint:", 1, WHITE)
-    sprint_value = pygame.font.SysFont('comicsans', 40).render(str(sprint_stamina), 1, RED)
+    sprint = pygame.font.SysFont('sans', 35).render("Sprint:", 1, WHITE)
+    sprint_value = pygame.font.SysFont('sans', 40).render(str(sprint_stamina), 1, RED)
     WIN.blit(sprint, (WIDTH + 80, 110))
     WIN.blit(sprint_value, (WIDTH + 170, 110))
-    time_disp = pygame.font.SysFont('comicsans', 60).render("Time: " + str(time), 1, WHITE)
+    time_disp = pygame.font.SysFont('sans', 60).render("Time: " + str(time), 1, WHITE)
     WIN.blit(time_disp, (WIDTH + 65, 15))
-    snakes_killed_disp = pygame.font.SysFont('comicsans', 35).render("Snakes Killed: " + str(snakes_killed), 1, WHITE)
+    snakes_killed_disp = pygame.font.SysFont('sans', 35).render("Snakes Killed: " + str(snakes_killed), 1, WHITE)
     WIN.blit(snakes_killed_disp, (WIDTH + 55, 450))
     if poison == 1:
         WIN.blit(POISON_FOOD, (food.x, food.y))
@@ -165,9 +165,9 @@ def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_st
     for bullet in food_bullets:
         pygame.draw.rect(WIN, (255,0,0), bullet)
 
-    reset = pygame.font.SysFont('comicsans', 40).render("Reset", 1, BLACK)
-    main_menu = pygame.font.SysFont('comicsans', 40).render("Main Menu", 1, BLACK)
-    quit = pygame.font.SysFont('comicsans', 40).render("Exit", 1, BLACK)
+    reset = pygame.font.SysFont('sans', 40).render("Reset", 1, BLACK)
+    main_menu = pygame.font.SysFont('sans', 40).render("Main Menu", 1, BLACK)
+    quit = pygame.font.SysFont('sans', 40).render("Exit", 1, BLACK)
 
     mx, my = pygame.mouse.get_pos()
     pygame.draw.rect(WIN, WHITE, MAIN_MENU_BUTTON)
@@ -188,17 +188,17 @@ def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_st
         if pygame.mouse.get_pressed()[0] == 1:
             pygame.draw.rect(WIN, SILVER, QUIT_BUTTON)
             quit()        
-    WIN.blit(main_menu, (980, 215))
-    WIN.blit(reset, (1010, 290))
-    WIN.blit(quit, (1020, 365))
+    WIN.blit(main_menu, (980, 205))
+    WIN.blit(reset, (1010, 280))
+    WIN.blit(quit, (1020, 355))
     pygame.display.update()
 
 def draw_end_game(end_game, time, snakes_killed):
     if end_game == 1:
-        draw_text = pygame.font.SysFont('comicsans', 38).render("YOU LOST, YOU SURVIVED " + str(time) + " SECONDS AND KILLED " + str(snakes_killed) + " SNAKES", 1, WHITE)
+        draw_text = pygame.font.SysFont('sans', 34).render("YOU LOST, YOU SURVIVED " + str(time) + " SECONDS AND KILLED " + str(snakes_killed) + " SNAKES", 1, WHITE)
         WIN.blit(draw_text, (WIDTH//2 - draw_text.get_width()/2, HEIGHT/2 - draw_text.get_height()/2))
     if end_game == 2:
-        draw_text = pygame.font.SysFont('comicsans', 38).render("YOU WON, YOU SURVIVED " + str(time) + " SECONDS AND KILLED ALL " + str(snakes_killed) + " SNAKES", 1, WHITE)
+        draw_text = pygame.font.SysFont('sans', 34).render("YOU WON, YOU SURVIVED " + str(time) + " SECONDS AND KILLED ALL " + str(snakes_killed) + " SNAKES", 1, WHITE)
         WIN.blit(draw_text, (WIDTH//2 - draw_text.get_width()/2, HEIGHT/2 - draw_text.get_height()/2))
     pygame.display.update()
     pygame.time.delay(3000)
@@ -639,55 +639,55 @@ def draw_main_menu():
             pygame.draw.rect(WIN, SILVER, EIGHT_SNAKES)
             number_of_snakes = 8      
                              
-    speed_text = pygame.font.SysFont('comicsans', 50).render("Speed:", 1, WHITE)
-    snake_text = pygame.font.SysFont('comicsans', 50).render("Snake Amount:", 1, WHITE)
-    food_text = pygame.font.SysFont('comicsans', 50).render("Food:", 1, WHITE)
-    start_text = pygame.font.SysFont('comicsans', 80).render("START", 1, BLACK)
+    speed_text = pygame.font.SysFont('sans', 50).render("Speed:", 1, WHITE)
+    snake_text = pygame.font.SysFont('sans', 50).render("Snake Amount:", 1, WHITE)
+    food_text = pygame.font.SysFont('sans', 50).render("Food:", 1, WHITE)
+    start_text = pygame.font.SysFont('sans', 80).render("START", 1, BLACK)
     
-    apple_text = pygame.font.SysFont('comicsans', 50).render("Apple", 1, BLACK)
-    taco_text = pygame.font.SysFont('comicsans', 50).render("Taco", 1, BLACK)
-    burger_text = pygame.font.SysFont('comicsans', 50).render("Burger", 1, BLACK)
+    apple_text = pygame.font.SysFont('sans', 50).render("Apple", 1, BLACK)
+    taco_text = pygame.font.SysFont('sans', 50).render("Taco", 1, BLACK)
+    burger_text = pygame.font.SysFont('sans', 50).render("Burger", 1, BLACK)
     
-    four_text = pygame.font.SysFont('comicsans', 50).render("4", 1, BLACK)
-    five_text = pygame.font.SysFont('comicsans', 50).render("5", 1, BLACK)
-    six_text = pygame.font.SysFont('comicsans', 50).render("6", 1, BLACK)
-    seven_text = pygame.font.SysFont('comicsans', 50).render("7", 1, BLACK)
-    eight_text = pygame.font.SysFont('comicsans', 50).render("8", 1, BLACK)
+    four_text = pygame.font.SysFont('sans', 50).render("4", 1, BLACK)
+    five_text = pygame.font.SysFont('sans', 50).render("5", 1, BLACK)
+    six_text = pygame.font.SysFont('sans', 50).render("6", 1, BLACK)
+    seven_text = pygame.font.SysFont('sans', 50).render("7", 1, BLACK)
+    eight_text = pygame.font.SysFont('sans', 50).render("8", 1, BLACK)
     
-    slow_text = pygame.font.SysFont('comicsans', 50).render("Slow", 1, BLACK)
-    normal_text = pygame.font.SysFont('comicsans', 50).render("Normal", 1, BLACK)
-    fast_text = pygame.font.SysFont('comicsans', 50).render("Fast", 1, BLACK)
+    slow_text = pygame.font.SysFont('sans', 50).render("Slow", 1, BLACK)
+    normal_text = pygame.font.SysFont('sans', 50).render("Normal", 1, BLACK)
+    fast_text = pygame.font.SysFont('sans', 50).render("Fast", 1, BLACK)
     
     game_name_text = pygame.font.SysFont('lucidahandwriting', 100).render("Cursed Snake Game", 1, BLACK)
-    author_name_text = pygame.font.SysFont('comicsans', 40).render("by Lorin Zhang", 1, BLACK)
-    date_text = pygame.font.SysFont('comicsans', 40).render("July 2021", 1, BLACK)
+    author_name_text = pygame.font.SysFont('sans', 40).render("by Lorin Zhang", 1, BLACK)
+    date_text = pygame.font.SysFont('sans', 40).render("July 2021", 1, BLACK)
 
     
-    summary_text = pygame.font.SysFont('comicsans', 50).render("You are a(n) " + food_name + " against " + str(number_of_snakes) + " snakes with " + speed_string + " speed.", 1, BLACK)
+    summary_text = pygame.font.SysFont('sans', 50).render("You are a(n) " + food_name + " against " + str(number_of_snakes) + " snakes with " + speed_string + " speed.", 1, BLACK)
                   
     WIN.blit(game_name_text, (30, 75))
     WIN.blit(author_name_text, (450, 250))
     WIN.blit(date_text, (450, 300))  
     WIN.blit(summary_text, (130, 550))           
                             
-    WIN.blit(start_text, (WIDTH//2 + 40, HEIGHT//2 - 20)) 
+    WIN.blit(start_text, (WIDTH//2 + 20, HEIGHT//2 - 40)) 
     WIN.blit(food_text, (100, HEIGHT//2 + 200))  
     WIN.blit(speed_text, (100, HEIGHT//2 + 300))  
     WIN.blit(snake_text, (100, HEIGHT//2 + 400))  
     
-    WIN.blit(apple_text, (670, HEIGHT//2 + 200))
-    WIN.blit(taco_text, (270, HEIGHT//2 + 200))
-    WIN.blit(burger_text, (470, HEIGHT//2 + 200)) 
+    WIN.blit(apple_text, (670, HEIGHT//2 + 190))
+    WIN.blit(taco_text, (270, HEIGHT//2 + 190))
+    WIN.blit(burger_text, (470, HEIGHT//2 + 190)) 
     
-    WIN.blit(fast_text, (270, HEIGHT//2 + 300))
-    WIN.blit(normal_text, (470, HEIGHT//2 + 300))
-    WIN.blit(slow_text, (670, HEIGHT//2 + 300)) 
+    WIN.blit(fast_text, (270, HEIGHT//2 + 290))
+    WIN.blit(normal_text, (460, HEIGHT//2 + 290))
+    WIN.blit(slow_text, (680, HEIGHT//2 + 290)) 
     
-    WIN.blit(four_text, (415, HEIGHT//2 + 400))
-    WIN.blit(five_text, (515, HEIGHT//2 + 400))
-    WIN.blit(six_text, (615, HEIGHT//2 + 400)) 
-    WIN.blit(seven_text, (715, HEIGHT//2 + 400))
-    WIN.blit(eight_text, (815, HEIGHT//2 + 400))
+    WIN.blit(four_text, (415, HEIGHT//2 + 390))
+    WIN.blit(five_text, (515, HEIGHT//2 + 390))
+    WIN.blit(six_text, (615, HEIGHT//2 + 390)) 
+    WIN.blit(seven_text, (715, HEIGHT//2 + 390))
+    WIN.blit(eight_text, (815, HEIGHT//2 + 390))
     
     pygame.display.update()
 
