@@ -22,7 +22,7 @@ from pygame.event import get
 from snake_ai import SnakeAI
 
 WIDTH, HEIGHT = pygame_constants.WIDTH, pygame_constants.HEIGHT
-ACTUAL_WINDOW_WIDTH = WIDTH + 250
+ACTUAL_WINDOW_WIDTH = WIDTH + 280
 BLOCK_WIDTH, BLOCK_HEIGHT = pygame_constants.BLOCK_WIDTH, pygame_constants.BLOCK_HEIGHT
 FPS = pygame_constants.FPS
 VEL = 2
@@ -33,6 +33,9 @@ USE_STAMINA = 20 # drain a percentage of stamina every 20ms == depletes full bar
 POISON_DURATION = 5000 # only get 5seconds to use the poison
 BLACK = (0,0,0)
 WHITE = (255,255,255)
+GREY = (112,128,144)
+SILVER = (192,192,192)
+RED = (255,0,0)
 SPAWN_POWER_UP_INTERVAL = 1800 # 2700/60 = 45 1800/60 = 30 seconds
 POWER_UP_TIME = 10000 # powers ups are only active for 10 seconds 
 MAX_SNAKES = 8
@@ -77,6 +80,17 @@ POISON_PWR_UP = pygame.transform.scale(POISON_PWR_UP_IMG, (BLOCK_WIDTH, BLOCK_HE
 
 BORDER = pygame.Rect(WIDTH, 0, 2, HEIGHT)
 
+SNAKE_GRAVE_BORDER = pygame.Rect(WIDTH, 440, 280, 2)
+
+MAIN_MENU_BUTTON = pygame.Rect(WIDTH + 50, 200, 200, 50)
+RESET_BUTTON = pygame.Rect(WIDTH + 50, 275, 200, 50)
+QUIT_BUTTON = pygame.Rect(WIDTH + 50, 350, 200, 50)
+
+#global variables
+snake_speed = 0
+number_of_snakes = 0
+
+
 # function to spawn snake head with appropriate image orientation based on movement direction
 def spawn_snake_head(direction):
     #pygame has these flipped
@@ -90,15 +104,15 @@ def spawn_snake_head(direction):
 def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_stamina, snakes, direction, time, snakes_killed):
     WIN.fill(BLACK)
     pygame.draw.rect(WIN, WHITE, BORDER)
-    sprint_bar = pygame.font.SysFont('comicsans', 30).render("Sprint: " + str(sprint_stamina), 1, WHITE)
-    sprint_bar.set_alpha(150)
-    WIN.blit(sprint_bar, (ACTUAL_WINDOW_WIDTH - sprint_bar.get_width(), 70))
-    time_disp = pygame.font.SysFont('comicsans', 30).render("Time: " + str(time), 1, WHITE)
-    time_disp.set_alpha(150)
-    WIN.blit(time_disp, (ACTUAL_WINDOW_WIDTH - time_disp.get_width() - 10, 10))
-    snakes_killed_disp = pygame.font.SysFont('comicsans', 30).render("Snakes Killed: " + str(snakes_killed), 1, WHITE)
-    snakes_killed_disp.set_alpha(150)
-    WIN.blit(snakes_killed_disp, (ACTUAL_WINDOW_WIDTH - snakes_killed_disp.get_width() - 10, 40))
+    pygame.draw.rect(WIN, WHITE, SNAKE_GRAVE_BORDER)
+    sprint = pygame.font.SysFont('comicsans', 35).render("Sprint:", 1, WHITE)
+    sprint_value = pygame.font.SysFont('comicsans', 40).render(str(sprint_stamina), 1, RED)
+    WIN.blit(sprint, (WIDTH + 80, 110))
+    WIN.blit(sprint_value, (WIDTH + 170, 110))
+    time_disp = pygame.font.SysFont('comicsans', 60).render("Time: " + str(time), 1, WHITE)
+    WIN.blit(time_disp, (WIDTH + 65, 15))
+    snakes_killed_disp = pygame.font.SysFont('comicsans', 35).render("Snakes Killed: " + str(snakes_killed), 1, WHITE)
+    WIN.blit(snakes_killed_disp, (WIDTH + 55, 450))
     if poison == 1:
         WIN.blit(POISON_FOOD, (food.x, food.y))
     elif poison == 0:
@@ -124,6 +138,32 @@ def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_st
     for bullet in food_bullets:
         pygame.draw.rect(WIN, (255,0,0), bullet)
 
+    reset = pygame.font.SysFont('comicsans', 40).render("Reset", 1, BLACK)
+    main_menu = pygame.font.SysFont('comicsans', 40).render("Main Menu", 1, BLACK)
+    quit = pygame.font.SysFont('comicsans', 40).render("Exit", 1, BLACK)
+
+    mx, my = pygame.mouse.get_pos()
+    pygame.draw.rect(WIN, WHITE, MAIN_MENU_BUTTON)
+    pygame.draw.rect(WIN, WHITE, RESET_BUTTON)
+    pygame.draw.rect(WIN, WHITE, QUIT_BUTTON)
+    if MAIN_MENU_BUTTON.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, MAIN_MENU_BUTTON)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, MAIN_MENU_BUTTON)
+            main(reset = 1)
+    if RESET_BUTTON.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, RESET_BUTTON)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, RESET_BUTTON)
+            main(reset = 0)
+    if QUIT_BUTTON.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, QUIT_BUTTON)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, QUIT_BUTTON)
+            quit()        
+    WIN.blit(main_menu, (980, 215))
+    WIN.blit(reset, (1010, 290))
+    WIN.blit(quit, (1020, 365))
     pygame.display.update()
 
 def draw_end_game(end_game, time, snakes_killed):
@@ -134,7 +174,7 @@ def draw_end_game(end_game, time, snakes_killed):
         draw_text = pygame.font.SysFont('comicsans', 34).render("YOU WON, YOU SURVIVED " + str(time) + " SECONDS AND KILLED ALL " + str(snakes_killed) + " SNAKES", 1, WHITE)
         WIN.blit(draw_text, (WIDTH//2 - draw_text.get_width()/2, HEIGHT/2 - draw_text.get_height()/2))
     pygame.display.update()
-    pygame.time.delay(1000)
+    pygame.time.delay(4000)
 
 def food_movement(keys_pressed, food, sprint_stamina):
         sprint = 0
@@ -235,13 +275,13 @@ def handle_food_snake_collision(food, snakes, poison, food_bullets):
 def update_ignore_list(del_idx, ignore_list):
     ignore_list.append(del_idx)
 
-def to_graveyard(snakes, del_idx):
+def to_graveyard(snakes, del_idx, snakes_killed):
     for i in range(len(snakes[del_idx])):
-        snakes[del_idx][i].x = WIDTH + 100
-        snakes[del_idx][i].y = i*30
+        snakes[del_idx][i].x = WIDTH + (35 * snakes_killed)
+        snakes[del_idx][i].y = 500 + i*30
 
 # max of 8 snakes, maybe?
-def create_snakes(number_of_snakes, snake_length):
+def create_snakes(number_of_snakes):
     snakes = []
     snake_locations_x = []
     snake_locations_y = []
@@ -253,7 +293,7 @@ def create_snakes(number_of_snakes, snake_length):
     x_coord, y_coord = 0, 0
     for x in range(number_of_snakes):
         snakes.append([])
-        random_snake_lengths.append(random.randint(2,10))
+        random_snake_lengths.append(random.randint(2,15))
     
     print("Snake lengths: ", random_snake_lengths)
     for k in range(MAX_SNAKES):
@@ -352,7 +392,7 @@ def get_bullet_direction(keys_pressed):
 # when randomizing snake lengths, perhaps have an interval of lenghts to randomize from or no constraints
 # In the future maybe add ability for snakes to respawn and have it toggleable 
 
-def main():
+def game(snake_speed, number_of_snakes):
     snake_ai = SnakeAI()
     pygame.init()
     
@@ -371,8 +411,6 @@ def main():
 
     end_game = 0
 
-    snake_speed = 30 # lower is faster
-
     food_bullets = []
     activate_bullet = 0
     bullet_direction = 0
@@ -381,9 +419,7 @@ def main():
     drop_power_up = random.randint(0, 1200) # 0 to 45 seconds, 750 is adjusted for the framerate (45*60 = 2700)
     number_of_power_ups_dropped = 0
 
-    number_of_snakes = 8
-    snake_length = 6
-    snakes = create_snakes(number_of_snakes, snake_length)
+    snakes = create_snakes(number_of_snakes)
     snakes_killed = 0
 
     ignore_list = []
@@ -462,7 +498,7 @@ def main():
         if del_idx != -1:
             snakes_killed += 1
             update_ignore_list(del_idx, ignore_list)
-            to_graveyard(snakes, del_idx)
+            to_graveyard(snakes, del_idx, snakes_killed)
         if snakes_killed == number_of_snakes:
             end_game = 2
 
@@ -473,7 +509,21 @@ def main():
         handle_bullets(bullet_direction, food_bullets)
         draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_stamina, snakes, direction, time, snakes_killed)
         time_control += 1
-    main()
+    game(snake_speed, number_of_snakes)
+
+
+def draw_main_menu():
+    pass
+
+def main(reset):
+    global snake_speed
+    global number_of_snakes
+    if reset == 1:
+        game(snake_speed, number_of_snakes)
+    else:
+        snake_speed = 25 # lower is faster
+        number_of_snakes = 4
+        game(snake_speed, number_of_snakes)
 
 if __name__ == "__main__":
-    main()
+    main(reset = 0)
