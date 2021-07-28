@@ -113,7 +113,7 @@ class SnakeAI:
                 if self._ai_type[i] == 3:
                     directions.append(self.patrolling_ai(snakes, food, i))
                 if self._ai_type[i] == 4:
-                    directions.append(self.circling_ai(snakes, food, i, 1, self.ai_initial_setup))
+                    directions.append(self.circling_ai(snakes, food, i, self.line_up_orientation, self.ai_initial_setup))
             else:
                 directions.append(-1)
 

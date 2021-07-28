@@ -21,6 +21,15 @@ pygame.mixer.init()
 from pygame.event import get
 from snake_ai import SnakeAI
 
+
+### global variables ###
+snake_speed = 25
+number_of_snakes = 8
+food_name = "Apple"
+speed_string = "normal"
+### end global variables ###
+
+
 WIDTH, HEIGHT = pygame_constants.WIDTH, pygame_constants.HEIGHT
 ACTUAL_WINDOW_WIDTH = WIDTH + 280
 BLOCK_WIDTH, BLOCK_HEIGHT = pygame_constants.BLOCK_WIDTH, pygame_constants.BLOCK_HEIGHT
@@ -36,10 +45,12 @@ WHITE = (255,255,255)
 GREY = (112,128,144)
 SILVER = (192,192,192)
 RED = (255,0,0)
+GREEN = (0,100,0)
 SPAWN_POWER_UP_INTERVAL = 1800 # 2700/60 = 45 1800/60 = 30 seconds
 POWER_UP_TIME = 10000 # powers ups are only active for 10 seconds 
 MAX_SNAKES = 8
 
+pygame.init()
 WIN = pygame.display.set_mode((ACTUAL_WINDOW_WIDTH, HEIGHT))
 pygame.display.set_caption("Cursed Snake Game")
 
@@ -60,10 +71,12 @@ activate_sprint_recharge_event = pygame.USEREVENT + 6
 activate_shoot_food_event = pygame.USEREVENT + 7
 disable_power_up_event = pygame.USEREVENT + 8
 
+## global pygame var ##
+POISON_FOOD_IMG = pygame.image.load(os.path.join('Assets', 'poison_apple.png'))
 FOOD_IMG = pygame.image.load(os.path.join('Assets', 'apple.png'))
 FOOD = pygame.transform.scale(FOOD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT))
-POISON_FOOD_IMG = pygame.image.load(os.path.join('Assets', 'poison_apple.png'))
 POISON_FOOD = pygame.transform.scale(POISON_FOOD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT))
+## end global pygame var ##
 
 SNAKE_BODY_IMG = pygame.image.load(os.path.join('Assets', 'snake_body.png'))
 SNAKE_BODY = pygame.transform.scale(SNAKE_BODY_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT))
@@ -86,9 +99,23 @@ MAIN_MENU_BUTTON = pygame.Rect(WIDTH + 50, 200, 200, 50)
 RESET_BUTTON = pygame.Rect(WIDTH + 50, 275, 200, 50)
 QUIT_BUTTON = pygame.Rect(WIDTH + 50, 350, 200, 50)
 
-#global variables
-snake_speed = 0
-number_of_snakes = 0
+
+# start button for main menu 
+START_GAME_BUTTON = pygame.Rect(WIDTH//2, HEIGHT//2 - 30, 250, 70)
+# snake count options
+FOUR_SNAKES = pygame.Rect( 400,  HEIGHT//2 + 390, 50, 50)
+FIVE_SNAKES = pygame.Rect( 500,  HEIGHT//2 + 390, 50, 50)
+SIX_SNAKES = pygame.Rect( 600,  HEIGHT//2 + 390, 50, 50)
+SEVEN_SNAKES = pygame.Rect( 700,  HEIGHT//2 + 390, 50, 50)
+EIGHT_SNAKES = pygame.Rect( 800,  HEIGHT//2 + 390, 50, 50)
+# # snake speed options
+FAST_SPEED = pygame.Rect( 250,  HEIGHT//2 + 290, 150, 50)
+NORMAL_SPEED = pygame.Rect( 450,  HEIGHT//2 + 290, 150, 50)
+SLOW_SPEED = pygame.Rect( 650,  HEIGHT//2 + 290, 150, 50)
+# snake food options
+TACO_OPTION = pygame.Rect( 250,  HEIGHT//2 + 190, 150, 50)
+BURGER_OPTION = pygame.Rect( 450, HEIGHT//2 + 190, 150,  50)
+APPLE_OPTION = pygame.Rect( 650, HEIGHT//2 + 190,  150,  50)
 
 
 # function to spawn snake head with appropriate image orientation based on movement direction
@@ -150,12 +177,12 @@ def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_st
         pygame.draw.rect(WIN, GREY, MAIN_MENU_BUTTON)
         if pygame.mouse.get_pressed()[0] == 1:
             pygame.draw.rect(WIN, SILVER, MAIN_MENU_BUTTON)
-            main(reset = 1)
+            main(reset = 0)
     if RESET_BUTTON.collidepoint((mx,my)):
         pygame.draw.rect(WIN, GREY, RESET_BUTTON)
         if pygame.mouse.get_pressed()[0] == 1:
             pygame.draw.rect(WIN, SILVER, RESET_BUTTON)
-            main(reset = 0)
+            main(reset = 1)
     if QUIT_BUTTON.collidepoint((mx,my)):
         pygame.draw.rect(WIN, GREY, QUIT_BUTTON)
         if pygame.mouse.get_pressed()[0] == 1:
@@ -168,13 +195,13 @@ def draw_window(food, poison, power_up, power_up_status, food_bullets, sprint_st
 
 def draw_end_game(end_game, time, snakes_killed):
     if end_game == 1:
-        draw_text = pygame.font.SysFont('comicsans', 34).render("YOU LOST, YOU SURVIVED " + str(time) + " SECONDS AND YOU KILLED " + str(snakes_killed) + " SNAKES", 1, WHITE)
+        draw_text = pygame.font.SysFont('comicsans', 38).render("YOU LOST, YOU SURVIVED " + str(time) + " SECONDS AND KILLED " + str(snakes_killed) + " SNAKES", 1, WHITE)
         WIN.blit(draw_text, (WIDTH//2 - draw_text.get_width()/2, HEIGHT/2 - draw_text.get_height()/2))
     if end_game == 2:
-        draw_text = pygame.font.SysFont('comicsans', 34).render("YOU WON, YOU SURVIVED " + str(time) + " SECONDS AND KILLED ALL " + str(snakes_killed) + " SNAKES", 1, WHITE)
+        draw_text = pygame.font.SysFont('comicsans', 38).render("YOU WON, YOU SURVIVED " + str(time) + " SECONDS AND KILLED ALL " + str(snakes_killed) + " SNAKES", 1, WHITE)
         WIN.blit(draw_text, (WIDTH//2 - draw_text.get_width()/2, HEIGHT/2 - draw_text.get_height()/2))
     pygame.display.update()
-    pygame.time.delay(4000)
+    pygame.time.delay(3000)
 
 def food_movement(keys_pressed, food, sprint_stamina):
         sprint = 0
@@ -394,7 +421,6 @@ def get_bullet_direction(keys_pressed):
 
 def game(snake_speed, number_of_snakes):
     snake_ai = SnakeAI()
-    pygame.init()
     
     food = pygame.Rect(450 - BLOCK_WIDTH//2, 450 - BLOCK_HEIGHT//2, BLOCK_WIDTH, BLOCK_HEIGHT)
     power_up = pygame.Rect(30 * random.randint(0, 29), 30 * random.randint(0, 29), BLOCK_WIDTH, BLOCK_HEIGHT)
@@ -511,19 +537,173 @@ def game(snake_speed, number_of_snakes):
         time_control += 1
     game(snake_speed, number_of_snakes)
 
-
 def draw_main_menu():
-    pass
-
-def main(reset):
     global snake_speed
     global number_of_snakes
+    global FOOD_IMG
+    global POISON_FOOD_IMG
+    global FOOD
+    global POISON_FOOD
+    WIN.fill(GREEN)
+    
+    global food_name
+    global speed_string
+    
+    pygame.draw.rect(WIN, RED, START_GAME_BUTTON)
+    pygame.draw.rect(WIN, WHITE, TACO_OPTION)
+    pygame.draw.rect(WIN, WHITE, BURGER_OPTION)
+    pygame.draw.rect(WIN, WHITE, APPLE_OPTION)
+    
+    pygame.draw.rect(WIN, WHITE, FAST_SPEED)
+    pygame.draw.rect(WIN, WHITE, NORMAL_SPEED)
+    pygame.draw.rect(WIN, WHITE, SLOW_SPEED)   
+    
+    pygame.draw.rect(WIN, WHITE, FOUR_SNAKES)
+    pygame.draw.rect(WIN, WHITE, FIVE_SNAKES)
+    pygame.draw.rect(WIN, WHITE, SIX_SNAKES)
+    pygame.draw.rect(WIN, WHITE, SEVEN_SNAKES)
+    pygame.draw.rect(WIN, WHITE, EIGHT_SNAKES)
+  
+    mx, my = pygame.mouse.get_pos()
+    if START_GAME_BUTTON.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, WHITE, START_GAME_BUTTON)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, RED, START_GAME_BUTTON)
+            FOOD = pygame.transform.scale(FOOD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT))
+            POISON_FOOD = pygame.transform.scale(POISON_FOOD_IMG, (BLOCK_WIDTH, BLOCK_HEIGHT))
+            game(snake_speed, number_of_snakes)
+            
+    if TACO_OPTION.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, TACO_OPTION)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, TACO_OPTION)
+            POISON_FOOD_IMG = pygame.image.load(os.path.join('Assets', 'poison_taco.png'))
+            FOOD_IMG = pygame.image.load(os.path.join('Assets', 'taco.png'))
+            food_name = "Taco"
+    if BURGER_OPTION.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, BURGER_OPTION)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, BURGER_OPTION)
+            POISON_FOOD_IMG = pygame.image.load(os.path.join('Assets', 'poison_burger.png'))
+            FOOD_IMG = pygame.image.load(os.path.join('Assets', 'burger.png')) 
+            food_name = "Burger"
+    if APPLE_OPTION.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, APPLE_OPTION)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, APPLE_OPTION)
+            POISON_FOOD_IMG = pygame.image.load(os.path.join('Assets', 'poison_apple.png'))
+            FOOD_IMG = pygame.image.load(os.path.join('Assets', 'apple.png')) 
+            food_name = "Apple"
+    if FAST_SPEED.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, FAST_SPEED)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, FAST_SPEED)
+            snake_speed = 15
+            speed_string = "fast"
+    if NORMAL_SPEED.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, NORMAL_SPEED)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, NORMAL_SPEED)
+            snake_speed = 20 
+            speed_string = "normal"                        
+    if SLOW_SPEED.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, SLOW_SPEED)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, SLOW_SPEED)
+            snake_speed = 30
+            speed_string = "slow"
+
+    if FOUR_SNAKES.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, FOUR_SNAKES)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, FOUR_SNAKES)
+            number_of_snakes = 4
+    if FIVE_SNAKES.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, FIVE_SNAKES)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, FIVE_SNAKES)
+            number_of_snakes = 5                        
+    if SIX_SNAKES.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, SIX_SNAKES)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, SIX_SNAKES)
+            number_of_snakes = 6              
+    if SEVEN_SNAKES.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, SEVEN_SNAKES)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, SEVEN_SNAKES)
+            number_of_snakes = 7
+    if EIGHT_SNAKES.collidepoint((mx,my)):
+        pygame.draw.rect(WIN, GREY, EIGHT_SNAKES)
+        if pygame.mouse.get_pressed()[0] == 1:
+            pygame.draw.rect(WIN, SILVER, EIGHT_SNAKES)
+            number_of_snakes = 8      
+                             
+    speed_text = pygame.font.SysFont('comicsans', 50).render("Speed:", 1, WHITE)
+    snake_text = pygame.font.SysFont('comicsans', 50).render("Snake Amount:", 1, WHITE)
+    food_text = pygame.font.SysFont('comicsans', 50).render("Food:", 1, WHITE)
+    start_text = pygame.font.SysFont('comicsans', 80).render("START", 1, BLACK)
+    
+    apple_text = pygame.font.SysFont('comicsans', 50).render("Apple", 1, BLACK)
+    taco_text = pygame.font.SysFont('comicsans', 50).render("Taco", 1, BLACK)
+    burger_text = pygame.font.SysFont('comicsans', 50).render("Burger", 1, BLACK)
+    
+    four_text = pygame.font.SysFont('comicsans', 50).render("4", 1, BLACK)
+    five_text = pygame.font.SysFont('comicsans', 50).render("5", 1, BLACK)
+    six_text = pygame.font.SysFont('comicsans', 50).render("6", 1, BLACK)
+    seven_text = pygame.font.SysFont('comicsans', 50).render("7", 1, BLACK)
+    eight_text = pygame.font.SysFont('comicsans', 50).render("8", 1, BLACK)
+    
+    slow_text = pygame.font.SysFont('comicsans', 50).render("Slow", 1, BLACK)
+    normal_text = pygame.font.SysFont('comicsans', 50).render("Normal", 1, BLACK)
+    fast_text = pygame.font.SysFont('comicsans', 50).render("Fast", 1, BLACK)
+    
+    game_name_text = pygame.font.SysFont('lucidahandwriting', 100).render("Cursed Snake Game", 1, BLACK)
+    author_name_text = pygame.font.SysFont('comicsans', 40).render("by Lorin Zhang", 1, BLACK)
+    date_text = pygame.font.SysFont('comicsans', 40).render("July 2021", 1, BLACK)
+
+    
+    summary_text = pygame.font.SysFont('comicsans', 50).render("You are a(n) " + food_name + " against " + str(number_of_snakes) + " snakes with " + speed_string + " speed.", 1, BLACK)
+                  
+    WIN.blit(game_name_text, (30, 75))
+    WIN.blit(author_name_text, (450, 250))
+    WIN.blit(date_text, (450, 300))  
+    WIN.blit(summary_text, (130, 550))           
+                            
+    WIN.blit(start_text, (WIDTH//2 + 40, HEIGHT//2 - 20)) 
+    WIN.blit(food_text, (100, HEIGHT//2 + 200))  
+    WIN.blit(speed_text, (100, HEIGHT//2 + 300))  
+    WIN.blit(snake_text, (100, HEIGHT//2 + 400))  
+    
+    WIN.blit(apple_text, (670, HEIGHT//2 + 200))
+    WIN.blit(taco_text, (270, HEIGHT//2 + 200))
+    WIN.blit(burger_text, (470, HEIGHT//2 + 200)) 
+    
+    WIN.blit(fast_text, (270, HEIGHT//2 + 300))
+    WIN.blit(normal_text, (470, HEIGHT//2 + 300))
+    WIN.blit(slow_text, (670, HEIGHT//2 + 300)) 
+    
+    WIN.blit(four_text, (415, HEIGHT//2 + 400))
+    WIN.blit(five_text, (515, HEIGHT//2 + 400))
+    WIN.blit(six_text, (615, HEIGHT//2 + 400)) 
+    WIN.blit(seven_text, (715, HEIGHT//2 + 400))
+    WIN.blit(eight_text, (815, HEIGHT//2 + 400))
+    
+    pygame.display.update()
+
+def main(reset = 0):
     if reset == 1:
         game(snake_speed, number_of_snakes)
     else:
-        snake_speed = 25 # lower is faster
-        number_of_snakes = 4
-        game(snake_speed, number_of_snakes)
+        clock = pygame.time.Clock()
+        run = True
+        while(run):
+            clock.tick(FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+                    pygame.quit()
+            draw_main_menu()
 
 if __name__ == "__main__":
     main(reset = 0)
